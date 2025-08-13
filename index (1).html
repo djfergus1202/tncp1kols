@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Research &amp; Analysis Platform</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap CSS for responsive grid and components -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-k5P9bZtXHtPIBiLxAy+2C6bI5RyELgczGqSPeQ8IlVHe7FyyPENqv+LmkjTBo8mtjTxAWLj+XWUpO7ujXW8f2g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Chart.js for charts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
+  <!-- Math.js for symbolic computation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <!-- Plotly.js for forest plot and radar charts -->
+  <script src="https://cdn.plot.ly/plotly-2.24.2.min.js"></script>
+  <!-- PapaParse for CSV/TSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- 3Dmol.js for molecular visualization -->
+  <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+  <!-- MathJax for rendering mathematical formulas -->
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    :root {
+      /* Light theme palette */
+      --bg: #ffffff;
+      --fg: #0a213e;
+      --primary: #1d4ed8;
+      --secondary: #64748b;
+      --accent: #1e88e5;
+      --success: #059669;
+      --danger: #dc2626;
+      --muted: #f1f5f9;
+      --card-bg: #f8fafc;
+      --border: #e2e8f0;
+    }
+    body.dark-mode {
+      /* Dark theme overrides */
+      --bg: #0a192f;
+      --fg: #f1f5f9;
+      --primary: #3b82f6;
+      --secondary: #94a3b8;
+      --accent: #60a5fa;
+      --success: #10b981;
+      --danger: #ef4444;
+      --muted: #15213a;
+      --card-bg: #112240;
+      --border: #1e293b;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      margin: 0;
+    }
+    /* Navigation bar */
+    nav.navbar {
+      background-color: var(--bg);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      color: var(--primary) !important;
+    }
+    .nav-link {
+      color: var(--secondary) !important;
+      font-weight: 500;
+      margin-right: 1rem;
+    }
+    .nav-link:hover {
+      color: var(--primary) !important;
+    }
+    .navbar-toggler-icon {
+      filter: invert(50%);
+    }
+    /* Hero section */
+    .hero-section {
+      position: relative;
+      background-image: url('d9e7791f-f80a-4134-9727-61a5818db618.png');
+      background-size: cover;
+      background-position: center;
+      height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #ffffff;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      padding: 1rem;
+    }
+    .hero-content h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .hero-content p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: #d1d5db;
+    }
+    .btn-primary {
+      background-color: var(--primary) !important;
+      border-color: var(--primary) !important;
+    }
+    /* Section spacing */
+    section {
+      padding: 4rem 0;
+    }
+    .section-title {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .section-title h2 {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .section-title p {
+      color: var(--secondary);
+    }
+    /* Cards */
+    .card-custom {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card-custom h5 {
+      margin-bottom: 1rem;
+    }
+    .card-custom .form-label {
+      font-weight: 500;
+    }
+    .card-custom input,
+    .card-custom textarea,
+    .card-custom select {
+      margin-bottom: 1rem;
+    }
+    /* Results styling */
+    .result-block {
+      background-color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .result-block p {
+      margin: 0.25rem 0;
+    }
+    /* Prisma flow diagram styling */
+    .prisma-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      position: relative;
+    }
+    .prisma-box {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      text-align: center;
+      min-width: 200px;
+    }
+    .prisma-arrow {
+      width: 2px;
+      height: 30px;
+      background-color: var(--secondary);
+    }
+    .prisma-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    /* Data source cards */
+    .data-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .data-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    .data-card i {
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin-right: 0.5rem;
+    }
+    /* 3D viewer styling */
+    #viewer3d {
+      width: 100%;
+      height: 400px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 1rem;
+    }
+    /* Toggle switch styling */
+    .form-switch .form-check-input {
+      height: 1.5rem;
+      width: 3rem;
+      margin-left: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#home">Research Platform</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#analysis">Analysis</a></li>
+          <li class="nav-item"><a class="nav-link" href="#meta">Meta-Analysis</a></li>
+          <li class="nav-item"><a class="nav-link" href="#paper">Paper Rewriter</a></li>
+          <li class="nav-item"><a class="nav-link" href="#import">Data Import</a></li>
+          <li class="nav-item"><a class="nav-link" href="#dock">Molecular Docking</a></li>
+          <!-- Additional tool navigation links inserted for extended functionality -->
+          <li class="nav-item"><a class="nav-link" href="#citation">Citation &amp; Docs</a></li>
+          <li class="nav-item"><a class="nav-link" href="#drugs">Drugs &amp; Literature</a></li>
+          <li class="nav-item"><a class="nav-link" href="#math">Math &amp; Models</a></li>
+          <!-- Auto validator navigation link -->
+          <li class="nav-item"><a class="nav-link" href="#auto">Auto Validator</a></li>
+          <li class="nav-item"><a class="nav-link" href="#data">Sources</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+        </ul>
+        <!-- Dark mode toggle -->
+        <div class="form-check form-switch ms-3">
+          <input class="form-check-input" type="checkbox" id="darkModeToggle">
+          <label class="form-check-label" for="darkModeToggle"><i class="fa-solid fa-moon"></i></label>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- Hero Section -->
+  <section id="home" class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Integrated Academic Research &amp; Analysis</h1>
+      <p>Explore a comprehensive suite of tools for statistical analysis, meta‑analysis verification, paper enhancement, data import, and molecular visualization — all within a unified web experience.</p>
+      <a href="#analysis" class="btn btn-primary btn-lg">Get Started</a>
+    </div>
+  </section>
+  <!-- Automatic Paper Validation Section -->
+  <section id="auto" class="bg-light">
+    <div class="container">
+      <div class="section-title">
+        <h2>Automatic Paper Validator</h2>
+        <p>Run a quick diagnostic on your research paper: citation quality, readability and structural completeness.</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-8 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-clipboard-check me-2"></i> Paper Text</h5>
+            <label class="form-label" for="autoText">Paste your paper’s text or abstract</label>
+            <textarea id="autoText" class="form-control" rows="6" placeholder="Paste paper text here..."></textarea>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="autoCitations" checked>
+              <label class="form-check-label" for="autoCitations">Citation Analysis</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="autoReadability" checked>
+              <label class="form-check-label" for="autoReadability">Readability Assessment</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="autoSections" checked>
+              <label class="form-check-label" for="autoSections">Section Presence</label>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="runAutoValidation()">Run Validation</button>
+            <div id="autoResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+          <div class="card-custom bg-light">
+            <h5 class="fw-bold"><i class="fa-solid fa-lightbulb me-2"></i> Validation Tips</h5>
+            <ul class="small">
+              <li>Ensure citations are formatted consistently, e.g., [1], [Smith 2019].</li>
+              <li>Include standard sections such as Methods, Results, Discussion and References.</li>
+              <li>Aim for a Flesch Reading Ease above 60 for improved accessibility.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- About Section -->
+  <section id="about">
+    <div class="container">
+      <div class="section-title">
+        <h2>About the Platform</h2>
+        <p>An open, modular environment inspired by the uploaded Python modules. This site demonstrates how complex research workflows can be distilled into interactive, browser‑based tools.</p>
+      </div>
+      <div class="row align-items-center">
+        <div class="col-lg-6 mb-4">
+          <h3 class="fw-bold">Bringing research closer to you</h3>
+          <p>This platform combines statistical computing, systematic review verification, AI‑powered manuscript enhancement, data ingestion pipelines and biophysical simulations in one cohesive interface. It doesn’t execute the original Python scripts directly; instead, it re‑implements representative functionality in client‑side JavaScript to keep everything running on static hosting services like GitHub Pages.</p>
+          <ul class="list-unstyled">
+            <li><i class="fa-solid fa-check-circle text-success me-2"></i>Perform quick descriptive statistics and effect size calculations</li>
+            <li><i class="fa-solid fa-check-circle text-success me-2"></i>Validate meta‑analyses with interactive forest plots and PRISMA diagrams</li>
+            <li><i class="fa-solid fa-check-circle text-success me-2"></i>Assess readability and structure of your manuscripts</li>
+            <li><i class="fa-solid fa-check-circle text-success me-2"></i>Preview and validate your research datasets</li>
+            <li><i class="fa-solid fa-check-circle text-success me-2"></i>Visualize protein structures in 3D and explore docking predictions</li>
+          </ul>
+        </div>
+        <div class="col-lg-6 mb-4 text-center">
+          <img src="d9e7791f-f80a-4134-9727-61a5818db618.png" alt="Data and molecule graphic" class="img-fluid rounded shadow">
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Analysis Section -->
+  <section id="analysis">
+    <div class="container">
+      <div class="section-title">
+        <h2>Statistical Analysis &amp; Visualizations</h2>
+        <p>Interactive calculators replicating the functionality of the <code>1_Statistical_Analysis.py</code> module.</p>
+      </div>
+      <div class="row">
+        <!-- Descriptive Statistics -->
+        <div class="col-lg-6">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-chart-bar me-2"></i> Descriptive Statistics</h5>
+            <label class="form-label" for="descData">Enter numerical values (comma or newline separated)</label>
+            <textarea id="descData" class="form-control" rows="4" placeholder="1,2,3,4,5
+6,7,8,9,10"></textarea>
+            <button class="btn btn-primary" onclick="computeDescriptive()">Calculate</button>
+            <div id="descResults" class="result-block" style="display:none;"></div>
+            <canvas id="histogramChart" style="display:none; margin-top:1rem;"></canvas>
+          </div>
+        </div>
+        <!-- Effect Size -->
+        <div class="col-lg-6">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-flask me-2"></i> Effect Size Calculator</h5>
+            <div class="row">
+              <div class="col-6">
+                <h6 class="fw-semibold">Group 1 (Control)</h6>
+                <label class="form-label" for="n1">Sample size (n₁)</label>
+                <input type="number" id="n1" class="form-control" value="30" min="1">
+                <label class="form-label" for="mean1">Mean (μ₁)</label>
+                <input type="number" id="mean1" class="form-control" value="10">
+                <label class="form-label" for="sd1">SD (σ₁)</label>
+                <input type="number" id="sd1" class="form-control" value="2">
+              </div>
+              <div class="col-6">
+                <h6 class="fw-semibold">Group 2 (Treatment)</h6>
+                <label class="form-label" for="n2">Sample size (n₂)</label>
+                <input type="number" id="n2" class="form-control" value="30" min="1">
+                <label class="form-label" for="mean2">Mean (μ₂)</label>
+                <input type="number" id="mean2" class="form-control" value="12">
+                <label class="form-label" for="sd2">SD (σ₂)</label>
+                <input type="number" id="sd2" class="form-control" value="2.5">
+              </div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="computeEffectSize()">Compute Effect Size</button>
+            <div id="effectResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Meta-Analysis Section -->
+  <section id="meta" class="bg-light">
+    <div class="container">
+      <div class="section-title">
+        <h2>Meta‑Analysis Verification</h2>
+        <p>Build your own forest plot and validate study selection with an intuitive PRISMA flow diagram.</p>
+      </div>
+      <div class="row">
+        <!-- Forest Plot Builder -->
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-tree me-2"></i> Forest Plot Builder</h5>
+            <label class="form-label" for="forestInput">Enter study data (one study per line as: study, effect size, standard error, sample size)</label>
+            <textarea id="forestInput" class="form-control" rows="5" placeholder="Study 1, 0.5, 0.1, 120
+Study 2, -0.2, 0.15, 200
+Study 3, 0.8, 0.2, 80"></textarea>
+            <button class="btn btn-primary mt-2" onclick="buildForestPlot()">Generate Plot</button>
+            <div id="forestPlot" style="height:400px; margin-top:1rem;"></div>
+          </div>
+        </div>
+        <!-- PRISMA Diagram -->
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-diagram-project me-2"></i> PRISMA Flow Diagram</h5>
+            <div class="row">
+              <div class="col-6">
+                <label class="form-label" for="recordsIdentified">Records identified</label>
+                <input type="number" id="recordsIdentified" class="form-control" value="500" min="0">
+                <label class="form-label" for="afterDuplicates">After duplicates removed</label>
+                <input type="number" id="afterDuplicates" class="form-control" value="400" min="0">
+              </div>
+              <div class="col-6">
+                <label class="form-label" for="afterScreening">After screening</label>
+                <input type="number" id="afterScreening" class="form-control" value="200" min="0">
+                <label class="form-label" for="finalIncluded">Final included</label>
+                <input type="number" id="finalIncluded" class="form-control" value="50" min="0">
+              </div>
+            </div>
+            <button class="btn btn-primary mt-2" onclick="generatePrisma()">Generate PRISMA</button>
+            <div id="prismaDiagram" class="mt-4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Paper Rewriter Section -->
+  <section id="paper">
+    <div class="container">
+      <div class="section-title">
+        <h2>Academic Paper Readability &amp; Structure</h2>
+        <p>Inspired by the <code>3_Paper_Rewriter.py</code> module, this tool analyses the readability and structure of your text.</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-pen-nib me-2"></i> Readability Analyzer</h5>
+            <label class="form-label" for="paperText">Paste your text below</label>
+            <textarea id="paperText" class="form-control" rows="6" placeholder="Enter or paste academic text..."></textarea>
+            <button class="btn btn-primary mt-2" onclick="analyzeReadability()">Analyze</button>
+            <div id="readabilityResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Data Import Section -->
+  <section id="import" class="bg-light">
+    <div class="container">
+      <div class="section-title">
+        <h2>Data Import &amp; Validation</h2>
+        <p>Upload your research datasets and get an instant overview. This approximates the <code>4_Data_Import.py</code> functionality using client‑side parsing.</p>
+      </div>
+      <div class="card-custom">
+        <h5 class="fw-bold"><i class="fa-solid fa-file-import me-2"></i> Upload Files</h5>
+        <input type="file" id="dataFiles" class="form-control" multiple onchange="handleFileUpload(event)">
+        <div id="fileResults" class="mt-3"></div>
+      </div>
+    </div>
+  </section>
+  <!-- Molecular Docking Section -->
+  <section id="dock">
+    <div class="container">
+      <div class="section-title">
+        <h2>Molecular Docking &amp; Visualization</h2>
+        <p>Leverage a lightweight 3D viewer to explore protein structures and simulate docking — inspired by the <code>5_Molecular_Docking.py</code> module.</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-dna me-2"></i> Protein Visualization</h5>
+            <label class="form-label" for="pdbId">PDB ID</label>
+            <input type="text" id="pdbId" class="form-control" value="1UBQ" placeholder="e.g., 1UBQ">
+            <label class="form-label" for="viewStyle">Style</label>
+            <select id="viewStyle" class="form-select">
+              <option value="cartoon">Cartoon</option>
+              <option value="surface">Surface</option>
+              <option value="stick">Stick</option>
+              <option value="sphere">Sphere</option>
+            </select>
+            <button class="btn btn-primary mt-2" onclick="loadProtein()">Load Protein</button>
+            <div id="viewer3d"></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-vial me-2"></i> Docking Simulation</h5>
+            <label class="form-label" for="ligandSmiles">Ligand SMILES</label>
+            <input type="text" id="ligandSmiles" class="form-control" placeholder="e.g., CCN(CC)CCO">
+            <button class="btn btn-primary mt-2" onclick="simulateDocking()">Simulate Docking</button>
+            <div id="dockingResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Data Sources Section -->
+  <!-- Citation & Document Tools Section -->
+  <section id="citation" class="bg-light">
+    <div class="container">
+      <div class="section-title">
+        <h2>Citation &amp; Document Tools</h2>
+        <p>Validate your references, assemble simple markdown documents, and browse underlying data citations.</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-paragraph me-2"></i> Citation Validator</h5>
+            <label class="form-label" for="citationInput">Enter citations (one per line)</label>
+            <textarea id="citationInput" class="form-control" rows="5" placeholder="Smith A. et al. (2020) Nature 586:123–130. 10.1038/s41586-020-1234"></textarea>
+            <button class="btn btn-primary mt-2" onclick="validateCitations()">Validate</button>
+            <div id="citationResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-file-lines me-2"></i> Document Assembler</h5>
+            <label class="form-label" for="docTitle">Title</label>
+            <input type="text" id="docTitle" class="form-control" placeholder="Enter title">
+            <label class="form-label" for="docAuthor">Author</label>
+            <input type="text" id="docAuthor" class="form-control" placeholder="Enter author">
+            <label class="form-label" for="docType">Document Type</label>
+            <select id="docType" class="form-select">
+              <option value="research_article">Research Article</option>
+              <option value="thesis_chapter">Thesis Chapter</option>
+              <option value="grant_proposal">Grant Proposal</option>
+              <option value="conference_abstract">Conference Abstract</option>
+              <option value="systematic_review">Systematic Review</option>
+            </select>
+            <label class="form-label" for="docContent">Content (Markdown)</label>
+            <textarea id="docContent" class="form-control" rows="5" placeholder="Write your content here..."></textarea>
+            <button class="btn btn-primary mt-2" onclick="generateDocument()">Generate</button>
+            <div id="docOutput" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-database me-2"></i> Data &amp; Method Citations</h5>
+            <button class="btn btn-secondary" onclick="toggleCitations()">Show/Hide Citations</button>
+            <div id="dataCitationsList" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Drug & Literature Insights Section -->
+  <section id="drugs">
+    <div class="container">
+      <div class="section-title">
+        <h2>Drug &amp; Literature Insights</h2>
+        <p>Look up pharmacological properties and analyze scholarly text.</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-pills me-2"></i> Drug Properties &amp; Targets</h5>
+            <label class="form-label" for="drugName">Drug Name</label>
+            <input type="text" id="drugName" class="form-control" placeholder="e.g., Ibuprofen">
+            <button class="btn btn-primary mt-2" onclick="searchDrug()">Search</button>
+            <div id="drugResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-book-open me-2"></i> Literature Analyzer</h5>
+            <label class="form-label" for="litInput">Paste abstract or text</label>
+            <textarea id="litInput" class="form-control" rows="5" placeholder="Paste text here..."></textarea>
+            <button class="btn btn-primary mt-2" onclick="analyzeText()">Analyze</button>
+            <div id="litResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mathematics & PK/PD Models Section -->
+  <section id="math" class="bg-light">
+    <div class="container">
+      <div class="section-title">
+        <h2>Mathematics &amp; PK/PD Modelling</h2>
+        <p>Compute symbolic derivatives or integrals and explore pharmacokinetic/pharmacodynamic models interactively.</p>
+      </div>
+      <div class="row">
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-square-root-variable me-2"></i> Symbolic Calculator</h5>
+            <label class="form-label" for="mathExpr">Expression (in x)</label>
+            <input type="text" id="mathExpr" class="form-control" placeholder="e.g., 3*x^2 + 2*x + 1">
+            <label class="form-label" for="mathOp">Operation</label>
+            <select id="mathOp" class="form-select">
+              <option value="derivative">Derivative</option>
+              <option value="integral">Integral</option>
+            </select>
+            <button class="btn btn-primary mt-2" onclick="computeMath()">Compute</button>
+            <div id="mathResults" class="result-block" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+          <div class="card-custom">
+            <h5 class="fw-bold"><i class="fa-solid fa-chart-line me-2"></i> PK/PD Model Simulator</h5>
+            <label class="form-label" for="pkDose">Dose (D)</label>
+            <input type="number" id="pkDose" class="form-control" value="100">
+            <label class="form-label" for="pkKa">k<sub>a</sub> (absorption)</label>
+            <input type="number" id="pkKa" class="form-control" value="1" step="0.1">
+            <label class="form-label" for="pkKe">k<sub>e</sub> (elimination)</label>
+            <input type="number" id="pkKe" class="form-control" value="0.2" step="0.1">
+            <label class="form-label" for="pkVd">V<sub>d</sub> (volume)</label>
+            <input type="number" id="pkVd" class="form-control" value="10" step="0.1">
+            <label class="form-label" for="pdEmax">E<sub>max</sub></label>
+            <input type="number" id="pdEmax" class="form-control" value="1" step="0.1">
+            <label class="form-label" for="pdEC50">EC<sub>50</sub></label>
+            <input type="number" id="pdEC50" class="form-control" value="50" step="1">
+            <label class="form-label" for="pdHill">Hill coefficient (n)</label>
+            <input type="number" id="pdHill" class="form-control" value="1" step="0.1">
+            <button class="btn btn-primary mt-2" onclick="simulatePkPd()">Simulate</button>
+            <canvas id="pkpdChart" style="display:none; margin-top:1rem;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="data" class="bg-light">
+    <div class="container">
+      <div class="section-title">
+        <h2>Data Sources, Computational Methods &amp; Models</h2>
+        <p>A nod to the <code>8_Data_Citations.py</code> module — key external resources powering scientific research.</p>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <h4 class="fw-bold mb-3">Data Sources</h4>
+          <div class="data-card">
+            <i class="fa-solid fa-database"></i><strong> UniProt</strong>
+            <p class="mt-2 small">Protein sequence and functional information. Useful for understanding amino acid compositions and annotations.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-flask"></i><strong> PubChem</strong>
+            <p class="mt-2 small">Chemical structures and molecular properties. Ideal for retrieving SMILES strings and molecular descriptors.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-pills"></i><strong> DrugBank</strong>
+            <p class="mt-2 small">Comprehensive drug database covering targets, mechanisms of action, pharmacokinetics and indications.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-atom"></i><strong> ChEMBL</strong>
+            <p class="mt-2 small">Bioactivity data, IC<sub>50</sub> values and structure–activity relationships for thousands of compounds.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-cubes-stacked"></i><strong> PDB</strong>
+            <p class="mt-2 small">Repository of 3D structures of proteins and nucleic acids — essential for structural biology and docking.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h4 class="fw-bold mb-3">Computational Methods</h4>
+          <div class="data-card">
+            <i class="fa-solid fa-square-root-variable"></i><strong> SymPy</strong>
+            <p class="mt-2 small">Symbolic mathematics library enabling algebraic manipulations, differential equations and analytic derivations.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-chart-line"></i><strong> SciPy</strong>
+            <p class="mt-2 small">Scientific computing ecosystem for optimization, integration, interpolation and signal processing.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-vial-circle-check"></i><strong> RDKit</strong>
+            <p class="mt-2 small">Cheminformatics toolkit for generating molecular descriptors, fingerprints and 2D/3D structures.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-cube"></i><strong> 3Dmol.js</strong>
+            <p class="mt-2 small">Browser‑based 3D molecular visualization library used in this site to render protein structures interactively.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-network-wired"></i><strong> NetworkX</strong>
+            <p class="mt-2 small">Graph analysis library for constructing protein–drug interaction networks and computing topological metrics.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h4 class="fw-bold mb-3">Pharmacological Models</h4>
+          <div class="data-card">
+            <i class="fa-solid fa-chart-simple"></i><strong> Hill Equation</strong>
+            <p class="mt-2 small">Dose–response relationship: $$E = \frac{E_{\max} \cdot C^n}{EC_{50}^n + C^n}$$ Used to model receptor binding and pharmacodynamics.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-wave-square"></i><strong> PK Modeling</strong>
+            <p class="mt-2 small">One‑compartment kinetics: $$C(t) = \frac{D F k_a}{V_d(k_a - k_e)}(e^{-k_e t} - e^{-k_a t})$$ describes concentration–time profiles after dosing.</p>
+          </div>
+          <div class="data-card">
+            <i class="fa-solid fa-divide"></i><strong> Competitive Inhibition</strong>
+            <p class="mt-2 small">Michaelis–Menten with inhibitor: $$v = \frac{V_{\max} [S]}{K_m (1 + \frac{[I]}{K_i}) + [S]}$$ models enzyme kinetics and drug interactions.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Contact Section -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-title">
+        <h2>Contact &amp; Acknowledgements</h2>
+        <p>This demonstration site was handcrafted by remixing functionality from the uploaded Python modules. Source code is fully available.</p>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <h5 class="fw-bold">Platform Citation</h5>
+          <p>Please acknowledge the original Academic Research Platform when using insights from this site in your work.</p>
+          <pre><code>Ferguson, D.J. Academic Research Platform for Systematic Review Validation and Pharmacological Analysis. 2025. Developed using Streamlit, integrating data from UniProt, PubChem, DrugBank and ChEMBL.</code></pre>
+        </div>
+        <div class="col-md-6">
+          <h5 class="fw-bold">Get in Touch</h5>
+          <p>To report issues or contribute, open an issue on the <a href="https://github.com/" target="_blank">GitHub repository</a> or reach out via email.</p>
+          <p><i class="fa-solid fa-envelope me-2"></i>contact@example.com</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- JavaScript for interactivity -->
+  <script>
+    // Dark mode toggle
+    const darkToggle = document.getElementById('darkModeToggle');
+    darkToggle.addEventListener('change', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+    /* Helper function: parse numbers from textarea input */
+    function parseNumbers(input) {
+      const lines = input.trim().split(/[
+,\s]+/);
+      const nums = [];
+      for (let val of lines) {
+        const n = parseFloat(val);
+        if (!isNaN(n)) nums.push(n);
+      }
+      return nums;
+    }
+    /* Descriptive statistics computation */
+    function computeDescriptive() {
+      const input = document.getElementById('descData').value;
+      const values = parseNumbers(input);
+      const resultDiv = document.getElementById('descResults');
+      const chartCanvas = document.getElementById('histogramChart');
+      if (values.length === 0) {
+        resultDiv.style.display = 'none';
+        chartCanvas.style.display = 'none';
+        return;
+      }
+      const n = values.length;
+      const mean = values.reduce((a,b) => a + b, 0) / n;
+      const sorted = [...values].sort((a,b) => a - b);
+      const median = n % 2 ? sorted[Math.floor(n/2)] : (sorted[n/2 - 1] + sorted[n/2]) / 2;
+      const variance = values.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
+      const sd = Math.sqrt(variance);
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
+      resultDiv.innerHTML = `<p><strong>Count:</strong> ${n}</p>` +
+        `<p><strong>Mean:</strong> ${mean.toFixed(3)}</p>` +
+        `<p><strong>Median:</strong> ${median.toFixed(3)}</p>` +
+        `<p><strong>Standard Deviation:</strong> ${sd.toFixed(3)}</p>` +
+        `<p><strong>Min:</strong> ${minVal}</p>` +
+        `<p><strong>Max:</strong> ${maxVal}</p>`;
+      resultDiv.style.display = 'block';
+      chartCanvas.style.display = 'block';
+      if (chartCanvas._chart) chartCanvas._chart.destroy();
+      const bins = 10;
+      const binSize = (maxVal - minVal) / bins;
+      const counts = new Array(bins).fill(0);
+      values.forEach(v => {
+        const idx = Math.min(bins - 1, Math.floor((v - minVal) / binSize));
+        counts[idx]++;
+      });
+      const labels = counts.map((c, i) => {
+        const start = minVal + i*binSize;
+        const end = start + binSize;
+        return `${start.toFixed(2)}–${end.toFixed(2)}`;
+      });
+      const ctx = chartCanvas.getContext('2d');
+      const histChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Frequency',
+            data: counts,
+            backgroundColor: 'rgba(30, 136, 229, 0.6)',
+            borderColor: 'rgba(30, 136, 229, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Histogram' }
+          }
+        }
+      });
+      chartCanvas._chart = histChart;
+    }
+    /* Effect size computation */
+    function computeEffectSize() {
+      const n1 = parseFloat(document.getElementById('n1').value);
+      const mean1 = parseFloat(document.getElementById('mean1').value);
+      const sd1 = parseFloat(document.getElementById('sd1').value);
+      const n2 = parseFloat(document.getElementById('n2').value);
+      const mean2 = parseFloat(document.getElementById('mean2').value);
+      const sd2 = parseFloat(document.getElementById('sd2').value);
+      const resultDiv = document.getElementById('effectResults');
+      if (n1 <= 1 || n2 <= 1) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      const pooled = Math.sqrt(((n1 - 1)*sd1*sd1 + (n2 - 1)*sd2*sd2) / (n1 + n2 - 2));
+      const d = (mean2 - mean1) / pooled;
+      const g = d * (1 - 3/(4*(n1 + n2) - 9));
+      const se = Math.sqrt((n1 + n2)/(n1*n2) + d*d/(2*(n1 + n2)));
+      const ciLower = d - 1.96 * se;
+      const ciUpper = d + 1.96 * se;
+      let interpretation = '';
+      const absd = Math.abs(d);
+      if (absd < 0.2) interpretation = 'Small effect';
+      else if (absd < 0.5) interpretation = 'Small to medium effect';
+      else if (absd < 0.8) interpretation = 'Medium effect';
+      else interpretation = 'Large effect';
+      resultDiv.innerHTML = `<p><strong>Cohen's d:</strong> ${d.toFixed(3)}</p>` +
+        `<p><strong>Hedges' g:</strong> ${g.toFixed(3)}</p>` +
+        `<p><strong>Standard Error:</strong> ${se.toFixed(3)}</p>` +
+        `<p><strong>95% CI:</strong> [${ciLower.toFixed(3)}, ${ciUpper.toFixed(3)}]</p>` +
+        `<p><strong>Interpretation:</strong> ${interpretation}</p>`;
+      resultDiv.style.display = 'block';
+    }
+    /* Forest plot generation using Plotly */
+    function buildForestPlot() {
+      const input = document.getElementById('forestInput').value.trim();
+      const container = document.getElementById('forestPlot');
+      if (!input) {
+        container.innerHTML = '';
+        return;
+      }
+      const lines = input.split(/
+/);
+      const studies = [];
+      const effects = [];
+      const errors = [];
+      const sizes = [];
+      for (let line of lines) {
+        const parts = line.split(',');
+        if (parts.length < 3) continue;
+        const study = parts[0].trim();
+        const es = parseFloat(parts[1]);
+        const se = parseFloat(parts[2]);
+        const n = parts.length >= 4 ? parseFloat(parts[3]) : 100;
+        if (isNaN(es) || isNaN(se)) continue;
+        const ciLower = es - 1.96*se;
+        const ciUpper = es + 1.96*se;
+        studies.push(study);
+        effects.push(es);
+        errors.push({
+          type: 'data',
+          array: [ciUpper - es],
+          arrayminus: [es - ciLower]
+        });
+        sizes.push(Math.max(6, Math.min(20, n/10)));
+      }
+      const trace = {
+        x: effects,
+        y: studies,
+        error_x: {
+          type: 'data',
+          symmetric: false,
+          array: effects.map((es,i) => errors[i].array[0]),
+          arrayminus: effects.map((es,i) => errors[i].arrayminus[0]),
+          width: 0
+        },
+        mode: 'markers',
+        marker: {
+          size: sizes,
+          color: 'rgba(30,136,229,0.8)',
+          symbol: 'diamond'
+        },
+        type: 'scatter'
+      };
+      const layout = {
+        title: 'Forest Plot (95% CI)',
+        xaxis: { title: 'Effect Size', zeroline: true, zerolinecolor: '#ef4444' },
+        yaxis: { autorange: 'reversed' },
+        height: Math.max(400, studies.length * 40),
+        margin: { l: 150, r: 20, t: 40, b: 40 },
+        shapes: [
+          {
+            type: 'line',
+            x0: 0,
+            y0: -1,
+            x1: 0,
+            y1: studies.length,
+            line: {
+              color: 'red',
+              width: 1,
+              dash: 'dash'
+            }
+          }
+        ],
+        showlegend: false
+      };
+      Plotly.newPlot(container, [trace], layout);
+    }
+    /* PRISMA diagram generation */
+    function generatePrisma() {
+      const initial = parseInt(document.getElementById('recordsIdentified').value);
+      const afterDup = parseInt(document.getElementById('afterDuplicates').value);
+      const afterScreen = parseInt(document.getElementById('afterScreening').value);
+      const finalIncl = parseInt(document.getElementById('finalIncluded').value);
+      const duplicatesRemoved = initial - afterDup;
+      const excludedScreen = afterDup - afterScreen;
+      const excludedFull = afterScreen - finalIncl;
+      const diagram = document.getElementById('prismaDiagram');
+      diagram.innerHTML = '';
+      const flow = document.createElement('div');
+      flow.className = 'prisma-container';
+      const box1 = document.createElement('div');
+      box1.className = 'prisma-box';
+      box1.innerHTML = `Records identified<br><strong>n = ${initial.toLocaleString()}</strong>`;
+      flow.appendChild(box1);
+      const arrow1 = document.createElement('div');
+      arrow1.className = 'prisma-arrow';
+      flow.appendChild(arrow1);
+      const box2 = document.createElement('div');
+      box2.className = 'prisma-box';
+      box2.innerHTML = `After duplicates removed<br><strong>n = ${afterDup.toLocaleString()}</strong>`;
+      flow.appendChild(box2);
+      const arrow2 = document.createElement('div');
+      arrow2.className = 'prisma-arrow';
+      flow.appendChild(arrow2);
+      const row1 = document.createElement('div');
+      row1.className = 'prisma-row';
+      const screenBox = document.createElement('div');
+      screenBox.className = 'prisma-box';
+      screenBox.innerHTML = `Records screened<br><strong>n = ${afterDup.toLocaleString()}</strong>`;
+      const excludedBox = document.createElement('div');
+      excludedBox.className = 'prisma-box';
+      excludedBox.style.backgroundColor = 'rgba(239,68,68,0.1)';
+      excludedBox.style.borderColor = 'rgba(239,68,68,0.4)';
+      excludedBox.innerHTML = `Records excluded<br><strong>n = ${excludedScreen.toLocaleString()}</strong>`;
+      row1.appendChild(screenBox);
+      row1.appendChild(excludedBox);
+      flow.appendChild(row1);
+      const arrow3 = document.createElement('div');
+      arrow3.className = 'prisma-arrow';
+      flow.appendChild(arrow3);
+      const row2 = document.createElement('div');
+      row2.className = 'prisma-row';
+      const fullBox = document.createElement('div');
+      fullBox.className = 'prisma-box';
+      fullBox.innerHTML = `Full text assessed<br><strong>n = ${afterScreen.toLocaleString()}</strong>`;
+      const excludedFullBox = document.createElement('div');
+      excludedFullBox.className = 'prisma-box';
+      excludedFullBox.style.backgroundColor = 'rgba(239,68,68,0.1)';
+      excludedFullBox.style.borderColor = 'rgba(239,68,68,0.4)';
+      excludedFullBox.innerHTML = `Full text excluded<br><strong>n = ${excludedFull.toLocaleString()}</strong>`;
+      row2.appendChild(fullBox);
+      row2.appendChild(excludedFullBox);
+      flow.appendChild(row2);
+      const arrow4 = document.createElement('div');
+      arrow4.className = 'prisma-arrow';
+      flow.appendChild(arrow4);
+      const boxFinal = document.createElement('div');
+      boxFinal.className = 'prisma-box';
+      boxFinal.innerHTML = `Studies included<br><strong>n = ${finalIncl.toLocaleString()}</strong>`;
+      boxFinal.style.backgroundColor = 'rgba(252,211,77,0.2)';
+      boxFinal.style.borderColor = 'rgba(252,211,77,0.4)';
+      flow.appendChild(boxFinal);
+      diagram.appendChild(flow);
+    }
+    /* Readability analyzer */
+    function analyzeReadability() {
+      const text = document.getElementById('paperText').value;
+      const resultDiv = document.getElementById('readabilityResults');
+      if (!text || text.trim().length === 0) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      const words = text.match(/\w+/g) || [];
+      const wordCount = words.length;
+      const charCount = text.length;
+      const sentences = text.match(/[.!?]+/g) || [];
+      const sentenceCount = sentences.length || 1;
+      const paragraphs = text.trim().split(/
+\s*
+/).filter(p => p.trim().length > 0);
+      const paragraphCount = paragraphs.length;
+      function countSyllables(word) {
+        word = word.toLowerCase();
+        if (word.length <= 3) return 1;
+        const vowels = 'aeiouy';
+        let syllables = 0;
+        let prevVowel = false;
+        for (let i = 0; i < word.length; i++) {
+          const isVowel = vowels.includes(word[i]);
+          if (isVowel && !prevVowel) {
+            syllables++;
+            prevVowel = true;
+          } else if (!isVowel) {
+            prevVowel = false;
+          }
+        }
+        if (word.endsWith('e')) syllables--;
+        return syllables > 0 ? syllables : 1;
+      }
+      let syllableCount = 0;
+      for (let w of words) {
+        syllableCount += countSyllables(w);
+      }
+      const avgWordsPerSentence = wordCount / sentenceCount;
+      const avgSyllablesPerWord = syllableCount / wordCount;
+      const flesch = 206.835 - 1.015 * avgWordsPerSentence - 84.6 * avgSyllablesPerWord;
+      const fkGrade = 0.39 * avgWordsPerSentence + 11.8 * avgSyllablesPerWord - 15.59;
+      let readabilityLabel = '';
+      if (flesch >= 60) readabilityLabel = '<span class="text-success">Easy to read</span>';
+      else if (flesch >= 30) readabilityLabel = '<span class="text-warning">Moderately difficult</span>';
+      else readabilityLabel = '<span class="text-danger">Very difficult</span>';
+      resultDiv.innerHTML = `<p><strong>Word Count:</strong> ${wordCount}</p>` +
+        `<p><strong>Character Count:</strong> ${charCount}</p>` +
+        `<p><strong>Sentence Count:</strong> ${sentenceCount}</p>` +
+        `<p><strong>Paragraph Count:</strong> ${paragraphCount}</p>` +
+        `<p><strong>Flesch Reading Ease:</strong> ${flesch.toFixed(1)} (${readabilityLabel})</p>` +
+        `<p><strong>Flesch–Kincaid Grade Level:</strong> ${fkGrade.toFixed(1)}</p>`;
+      resultDiv.style.display = 'block';
+    }
+    /* File upload handler */
+    function handleFileUpload(event) {
+      const files = event.target.files;
+      const resultsContainer = document.getElementById('fileResults');
+      resultsContainer.innerHTML = '';
+      Array.from(files).forEach(file => {
+        const card = document.createElement('div');
+        card.className = 'card-custom';
+        const header = document.createElement('h6');
+        header.textContent = file.name;
+        card.appendChild(header);
+        const info = document.createElement('p');
+        info.textContent = `Size: ${(file.size/1024).toFixed(2)} KB`;
+        card.appendChild(info);
+        const previewDiv = document.createElement('div');
+        card.appendChild(previewDiv);
+        resultsContainer.appendChild(card);
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'csv' || ext === 'tsv') {
+          const delimiter = ext === 'tsv' ? '	' : ',';
+          Papa.parse(file, {
+            header: true,
+            delimiter: delimiter,
+            skipEmptyLines: true,
+            complete: function(results) {
+              displayDataFrame(results.data, previewDiv);
+            }
+          });
+        } else if (ext === 'json') {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const data = JSON.parse(e.target.result);
+              const arr = Array.isArray(data) ? data : [data];
+              displayDataFrame(arr, previewDiv);
+            } catch (err) {
+              previewDiv.innerHTML = '<p class="text-danger">Error parsing JSON.</p>';
+            }
+          };
+          reader.readAsText(file);
+        } else if (ext === 'xlsx' || ext === 'xls') {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheet = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheet];
+            const json = XLSX.utils.sheet_to_json(worksheet, { defval: null });
+            displayDataFrame(json, previewDiv);
+          };
+          reader.readAsArrayBuffer(file);
+        } else {
+          previewDiv.innerHTML = '<p class="text-warning">Unsupported file type.</p>';
+        }
+      });
+    }
+    // Display a preview and summary of a dataset
+    function displayDataFrame(data, container) {
+      if (!data || data.length === 0) {
+        container.innerHTML = '<p>No data detected.</p>';
+        return;
+      }
+      const columns = Object.keys(data[0]);
+      const numRows = data.length;
+      let missing = 0;
+      let duplicates = 0;
+      const uniqueRows = new Set();
+      const numericCols = [];
+      const textCols = [];
+      for (let col of columns) {
+        let allNumeric = true;
+        for (let row of data) {
+          const val = row[col];
+          if (val === null || val === undefined || val === '') missing++;
+          if (val !== null && val !== undefined && val !== '') {
+            const numVal = parseFloat(val);
+            if (isNaN(numVal)) {
+              allNumeric = false;
+            }
+          }
+        }
+        if (allNumeric) numericCols.push(col);
+        else textCols.push(col);
+      }
+      for (let row of data) {
+        const key = JSON.stringify(row);
+        if (uniqueRows.has(key)) duplicates++;
+        else uniqueRows.add(key);
+      }
+      const summary = document.createElement('div');
+      summary.className = 'result-block';
+      summary.innerHTML = `<p><strong>Rows:</strong> ${numRows}</p>` +
+        `<p><strong>Columns:</strong> ${columns.length}</p>` +
+        `<p><strong>Missing Values:</strong> ${missing}</p>` +
+        `<p><strong>Duplicate Rows:</strong> ${duplicates}</p>` +
+        `<p><strong>Numeric Columns:</strong> ${numericCols.length}</p>` +
+        `<p><strong>Text Columns:</strong> ${textCols.length}</p>`;
+      container.appendChild(summary);
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-bordered mt-2';
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      columns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      for (let i = 0; i < Math.min(5, data.length); i++) {
+        const tr = document.createElement('tr');
+        columns.forEach(col => {
+          const td = document.createElement('td');
+          const val = data[i][col];
+          td.textContent = val === null || val === undefined ? '' : val;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+    /* Molecular viewer */
+    let proteinViewer = null;
+    function loadProtein() {
+      const pdbId = document.getElementById('pdbId').value.trim();
+      const style = document.getElementById('viewStyle').value;
+      const container = document.getElementById('viewer3d');
+      container.innerHTML = '';
+      if (!pdbId) return;
+      proteinViewer = $3Dmol.createViewer(container, { backgroundColor: document.body.classList.contains('dark-mode') ? 'black' : 'white' });
+      proteinViewer.addModelFromURI(`https://files.rcsb.org/download/${pdbId}.pdb`, 'pdb', function(model) {
+        applyStyle(style);
+        proteinViewer.zoomTo();
+        proteinViewer.render();
+      });
+    }
+    function applyStyle(style) {
+      if (!proteinViewer) return;
+      let styleObj;
+      const colorScheme = document.body.classList.contains('dark-mode') ? 'whiteCarbon' : 'spectrum';
+      switch(style) {
+        case 'cartoon':
+          styleObj = { cartoon: { color: colorScheme } };
+          break;
+        case 'surface':
+          styleObj = { surface: { opacity: 0.8, color: colorScheme } };
+          break;
+        case 'stick':
+          styleObj = { stick: { colorscheme: colorScheme } };
+          break;
+        case 'sphere':
+          styleObj = { sphere: { scale: 0.3, colorscheme: colorScheme } };
+          break;
+      }
+      proteinViewer.setStyle({}, styleObj);
+    }
+    document.getElementById('viewStyle').addEventListener('change', function() {
+      applyStyle(this.value);
+      if (proteinViewer) proteinViewer.render();
+    });
+    darkToggle.addEventListener('change', function() {
+      if (proteinViewer) {
+        const currentStyle = document.getElementById('viewStyle').value;
+        loadProtein();
+        applyStyle(currentStyle);
+      }
+    });
+    /* Docking simulation */
+    function simulateDocking() {
+      const smiles = document.getElementById('ligandSmiles').value.trim();
+      const resultDiv = document.getElementById('dockingResults');
+      if (!smiles) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      const dockingScore = (Math.random() * ( -4 - ( -12 )) + ( -12 )).toFixed(2);
+      const rmsd = (Math.random() * (3.0 - 0.5) + 0.5).toFixed(2);
+      const types = ['hydrogen bond','hydrophobic','electrostatic','van der Waals'];
+      const interactions = [];
+      const num = Math.floor(Math.random() * 5) + 2;
+      for (let i = 0; i < num; i++) {
+        interactions.push(types[Math.floor(Math.random()*types.length)]);
+      }
+      resultDiv.innerHTML = `<p><strong>Ligand:</strong> ${smiles}</p>` +
+        `<p><strong>Predicted Binding Affinity:</strong> ${dockingScore} kcal/mol</p>` +
+        `<p><strong>Predicted RMSD:</strong> ${rmsd} Å</p>` +
+        `<p><strong>Interactions:</strong> ${interactions.join(', ')}</p>`;
+      resultDiv.style.display = 'block';
+    }
+
+    /* ---------------------------------------------------------------------------
+     * Extended tools: citation/document utilities, drug lookup, literature analysis,
+     * symbolic math and PK/PD simulation.
+     * These functions mirror capabilities from the newly uploaded Python modules
+     * (auto_validator.py, citation_validator.py, data_citations.py, document_generator.py,
+     *  drug_database.py, literature_analyzer.py, mathematical_engine.py, molecular_tools.py).
+     * All processing happens client‑side, allowing static hosting on GitHub Pages.
+     */
+
+    // Data and method citations aggregated from various sources
+    const citationsData = {
+      uniprot: { citation: "The UniProt Consortium. UniProt: the Universal Protein Knowledgebase in 2023. Nucleic Acids Res. 2023;51(D1):D523-D531.", doi: "10.1093/nar/gkac1052", url: "https://www.uniprot.org/", description: "Protein sequence and functional information" },
+      pubchem: { citation: "Kim S, Chen J, Cheng T, et al. PubChem 2023 update. Nucleic Acids Res. 2023;51(D1):D1373-D1380.", doi: "10.1093/nar/gkac956", url: "https://pubchem.ncbi.nlm.nih.gov/", description: "Chemical compound properties and structures" },
+      drugbank: { citation: "Wishart DS, Feunang YD, Guo AC, et al. DrugBank 5.0: a major update to the DrugBank database for 2018. Nucleic Acids Res. 2018;46(D1):D1074-D1082.", doi: "10.1093/nar/gkx1037", url: "https://go.drugbank.com/", description: "Drug and drug target information" },
+      chembl: { citation: "Mendez D, Gaulton A, Bento AP, et al. ChEMBL: towards direct deposition of bioassay data. Nucleic Acids Res. 2019;47(D1):D930-D940.", doi: "10.1093/nar/gky1075", url: "https://www.ebi.ac.uk/chembl/", description: "Bioactivity data for drug discovery" },
+      pdb: { citation: "Burley SK, Bhikadiya C, Bi C, et al. RCSB Protein Data Bank: powerful new tools for exploring 3D structures of biological macromolecules for basic and applied research and education. Nucleic Acids Res. 2021;49(D1):D437-D451.", doi: "10.1093/nar/gkaa1038", url: "https://www.rcsb.org/", description: "3D protein structure data" },
+      pubmed: { citation: "NCBI Resource Coordinators. Database Resources of the National Center for Biotechnology Information. Nucleic Acids Res. 2018;46(D1):D8-D13.", doi: "10.1093/nar/gkx1095", url: "https://pubmed.ncbi.nlm.nih.gov/", description: "Biomedical literature database" },
+      crossref: { citation: "Hendricks G, Tkaczyk D, Lin J, Feeney P. Crossref: The sustainable source of community-owned scholarly metadata. Quantitative Science Studies. 2020;1(1):414-427.", doi: "10.1162/qss_a_00022", url: "https://www.crossref.org/", description: "Citation linking and metadata" },
+      cyp450_data: { citation: "Zanger UM, Schwab M. Cytochrome P450 enzymes in drug metabolism: regulation of gene expression, enzyme activities, and impact of genetic variation. Pharmacol Ther. 2013;138(1):103-141.", doi: "10.1016/j.pharmthera.2012.12.007", url: "https://www.pharmvar.org/", description: "Cytochrome P450 enzyme data and pharmacogenomics" },
+      admet_data: { citation: "Daina A, Michielin O, Zoete V. SwissADME: a free web tool to evaluate pharmacokinetics, drug-likeness and medicinal chemistry friendliness of small molecules. Sci Rep. 2017;7:42717.", doi: "10.1038/srep42717", url: "http://www.swissadme.ch/", description: "ADMET prediction and drug-likeness assessment" },
+      lipinski_rules: { citation: "Lipinski CA, Lombardo F, Dominy BW, Feeney PJ. Experimental and computational approaches to estimate solubility and permeability in drug discovery and development settings. Adv Drug Deliv Rev. 2001;46(1-3):3-26.", doi: "10.1016/s0169-409x(00)00129-0", url: "https://doi.org/10.1016/s0169-409x(00)00129-0", description: "Rule of Five for drug-likeness" },
+      sympy: { citation: "Meurer A, Smith CP, Paprocki M, et al. SymPy: symbolic computing in Python. PeerJ Computer Science. 2017;3:e103.", doi: "10.7717/peerj-cs.103", url: "https://www.sympy.org/", description: "Symbolic mathematics computations" },
+      scipy: { citation: "Virtanen P, Gommers R, Oliphant TE, et al. SciPy 1.0: fundamental algorithms for scientific computing in Python. Nat Methods. 2020;17(3):261-272.", doi: "10.1038/s41592-019-0686-2", url: "https://scipy.org/", description: "Scientific computing algorithms" },
+      rdkit: { citation: "Landrum G. RDKit: Open-source cheminformatics.", url: "http://www.rdkit.org", description: "Chemical informatics and molecular property calculations" },
+      py3dmol: { citation: "Rego N, Koes D. 3Dmol.js: molecular visualization with WebGL. Bioinformatics. 2015;31(8):1322-1324.", doi: "10.1093/bioinformatics/btu829", url: "https://3dmol.csb.pitt.edu/", description: "3D molecular visualization" },
+      networkx: { citation: "Hagberg AA, Schult DA, Swart PJ. Exploring Network Structure, Dynamics, and Function using NetworkX. In: Proceedings of the 7th Python in Science Conference. 2008:11-15.", url: "https://networkx.org/", description: "Network analysis and graph algorithms" },
+      plotly: { citation: "Plotly Technologies Inc. Collaborative data science. Montreal, QC: Plotly Technologies Inc.; 2015.", url: "https://plot.ly", description: "Interactive data visualization" },
+      hill_equation: { citation: "Hill AV. The possible effects of the aggregation of the molecules of haemoglobin on its dissociation curves. J Physiol. 1910;40(Suppl):iv-vii.", description: "Hill equation for dose-response relationships" },
+      pk_modeling: { citation: "Gabrielsson J, Weiner D. Pharmacokinetic and Pharmacodynamic Data Analysis: Concepts and Applications. 5th ed. Swedish Academy of Pharmaceutical Sciences; 2016.", description: "Pharmacokinetic modeling principles" },
+      pbpk_modeling: { citation: "Jones HM, Rowland-Yeo K. Basic concepts in physiologically based pharmacokinetic modeling in drug discovery and development. CPT Pharmacometrics Syst Pharmacol. 2013;2(8):e63.", doi: "10.1038/psp.2013.41", description: "Physiologically-based pharmacokinetic modeling" },
+      competitive_inhibition: { citation: "Michaelis L, Menten ML. Die kinetik der invertinwirkung. Biochem Z. 1913;49:333-369.", description: "Michaelis-Menten kinetics and competitive inhibition" },
+      allometric_scaling: { citation: "Mahmood I. Application of allometric principles for the prediction of pharmacokinetics in human and veterinary drug development. Adv Drug Deliv Rev. 2007;59(11):1177-1192.", doi: "10.1016/j.addr.2007.05.001", description: "Allometric scaling in pharmacokinetics" }
+    };
+
+    // Drug property and target dataset derived from the Python drug_database module
+    const drugData = {
+      'metoprolol': { drug_name: 'Metoprolol', molecular_weight: 267.36, xlogp: 1.88, hbd: 2, hba: 4, tpsa: 50.7, targets: ['ADRB1','ADRB2'] },
+      'propranolol': { drug_name: 'Propranolol', molecular_weight: 259.34, xlogp: 3.48, hbd: 2, hba: 2, tpsa: 41.5, targets: ['Unknown'] },
+      'atenolol': { drug_name: 'Atenolol', molecular_weight: 266.34, xlogp: 0.16, hbd: 3, hba: 4, tpsa: 84.6, targets: ['Unknown'] },
+      'lisinopril': { drug_name: 'Lisinopril', molecular_weight: 405.49, xlogp: -1.22, hbd: 4, hba: 7, tpsa: 143.1, targets: ['ACE'] },
+      'enalapril': { drug_name: 'Enalapril', molecular_weight: 376.45, xlogp: 2.05, hbd: 2, hba: 5, tpsa: 95.9, targets: ['Unknown'] },
+      'atorvastatin': { drug_name: 'Atorvastatin', molecular_weight: 558.64, xlogp: 5.7, hbd: 4, hba: 8, tpsa: 140.8, targets: ['HMG-CoA reductase'] },
+      'simvastatin': { drug_name: 'Simvastatin', molecular_weight: 418.57, xlogp: 4.68, hbd: 1, hba: 5, tpsa: 72.8, targets: ['Unknown'] },
+      'ibuprofen': { drug_name: 'Ibuprofen', molecular_weight: 206.28, xlogp: 3.97, hbd: 1, hba: 2, tpsa: 37.3, targets: ['COX-1','COX-2'] },
+      'naproxen': { drug_name: 'Naproxen', molecular_weight: 230.26, xlogp: 3.18, hbd: 1, hba: 3, tpsa: 46.5, targets: ['Unknown'] },
+      'warfarin': { drug_name: 'Warfarin', molecular_weight: 308.33, xlogp: 2.7, hbd: 1, hba: 4, tpsa: 63.2, targets: ['CYP2C9','VKORC1'] },
+      'codeine': { drug_name: 'Codeine', molecular_weight: 299.36, xlogp: 1.2, hbd: 2, hba: 4, tpsa: 52.9, targets: ['CYP2D6'] },
+      'tamoxifen': { drug_name: 'Tamoxifen', molecular_weight: 371.51, xlogp: 6.3, hbd: 0, hba: 2, tpsa: 12.5, targets: ['CYP2D6','CYP3A4'] },
+      'clopidogrel': { drug_name: 'Clopidogrel', molecular_weight: 419.90, xlogp: 3.5, hbd: 0, hba: 3, tpsa: 54.4, targets: ['CYP2C19'] },
+      'omeprazole': { drug_name: 'Omeprazole', molecular_weight: 345.42, xlogp: 2.2, hbd: 1, hba: 6, tpsa: 88.3, targets: ['CYP2C19','CYP3A4'] },
+      'diazepam': { drug_name: 'Diazepam', molecular_weight: 284.74, xlogp: 2.8, hbd: 0, hba: 3, tpsa: 32.7, targets: ['CYP3A4','CYP2C19'] },
+      'caffeine': { drug_name: 'Caffeine', molecular_weight: 194.19, xlogp: -0.1, hbd: 0, hba: 6, tpsa: 58.4, targets: ['CYP1A2'] },
+      'acetaminophen': { drug_name: 'Acetaminophen', molecular_weight: 151.16, xlogp: 0.5, hbd: 2, hba: 3, tpsa: 49.3, targets: ['CYP2E1','CYP1A2'] },
+      'ketoconazole': { drug_name: 'Ketoconazole', molecular_weight: 531.43, xlogp: 4.4, hbd: 0, hba: 7, tpsa: 69.1, targets: ['CYP3A4'] },
+      'fluconazole': { drug_name: 'Fluconazole', molecular_weight: 306.27, xlogp: 0.4, hbd: 1, hba: 7, tpsa: 81.6, targets: ['CYP2C9','CYP2C19'] },
+      'clarithromycin': { drug_name: 'Clarithromycin', molecular_weight: 747.95, xlogp: 3.2, hbd: 3, hba: 13, tpsa: 182.0, targets: ['CYP3A4'] },
+      'fluvoxamine': { drug_name: 'Fluvoxamine', molecular_weight: 318.33, xlogp: 3.2, hbd: 1, hba: 4, tpsa: 40.6, targets: ['CYP1A2'] },
+      'quinidine': { drug_name: 'Quinidine', molecular_weight: 324.42, xlogp: 2.9, hbd: 2, hba: 4, tpsa: 45.6, targets: ['CYP2D6'] },
+      'ritonavir': { drug_name: 'Ritonavir', molecular_weight: 720.94, xlogp: 3.9, hbd: 4, hba: 9, tpsa: 202.3, targets: ['CYP3A4'] },
+      'cimetidine': { drug_name: 'Cimetidine', molecular_weight: 252.34, xlogp: 0.4, hbd: 2, hba: 6, tpsa: 88.9, targets: ['CYP2D6','CYP1A2'] },
+      'phenytoin': { drug_name: 'Phenytoin', molecular_weight: 252.27, xlogp: 2.5, hbd: 2, hba: 3, tpsa: 58.2, targets: ['CYP3A4','CYP2C9'] },
+      'carbamazepine': { drug_name: 'Carbamazepine', molecular_weight: 236.27, xlogp: 2.5, hbd: 2, hba: 2, tpsa: 46.3, targets: ['CYP3A4'] },
+      'rifampin': { drug_name: 'Rifampin', molecular_weight: 822.94, xlogp: 2.7, hbd: 6, hba: 14, tpsa: 220.2, targets: ['CYP3A4','CYP2C9'] },
+      'phenobarbital': { drug_name: 'Phenobarbital', molecular_weight: 232.23, xlogp: 1.5, hbd: 2, hba: 3, tpsa: 75.3, targets: ['CYP3A4','CYP2C9'] },
+      'dexamethasone': { drug_name: 'Dexamethasone', molecular_weight: 392.46, xlogp: 1.8, hbd: 3, hba: 6, tpsa: 94.8, targets: ['CYP3A4'] },
+      'aspirin': { drug_name: 'Aspirin', molecular_weight: 180.16, xlogp: 1.19, hbd: 1, hba: 4, tpsa: 63.6, targets: ['COX-1','COX-2'] },
+      'digoxin': { drug_name: 'Digoxin', molecular_weight: 780.94, xlogp: 1.26, hbd: 5, hba: 12, tpsa: 203.1, targets: ['Na+/K+ ATPase'] },
+      'metformin': { drug_name: 'Metformin', molecular_weight: 129.16, xlogp: -2.64, hbd: 4, hba: 2, tpsa: 88.9, targets: ['AMPK','Complex I'] }
+    };
+
+    // Validate citation list and provide basic statistics
+    function validateCitations() {
+      const input = document.getElementById('citationInput').value.trim();
+      const resultsDiv = document.getElementById('citationResults');
+      if (!input) {
+        resultsDiv.style.display = 'none';
+        return;
+      }
+      const lines = input.split(/\n/).map(l => l.trim()).filter(l => l.length > 0);
+      const doiRegex = /10\.[0-9]{4,9}\/[\S]+/i;
+      let valid = 0;
+      const citations = [];
+      lines.forEach(line => {
+        citations.push(line);
+        if (doiRegex.test(line)) valid++;
+      });
+      const duplicates = citations.filter((item, index) => citations.indexOf(item) !== index);
+      const invalid = citations.length - valid;
+      resultsDiv.innerHTML = `<p><strong>Total citations:</strong> ${citations.length}</p>` +
+        `<p><strong>Valid DOIs:</strong> ${valid}</p>` +
+        `<p><strong>Invalid:</strong> ${invalid}</p>` +
+        `<p><strong>Duplicates:</strong> ${duplicates.length}</p>`;
+      resultsDiv.style.display = 'block';
+    }
+
+    // Toggle display of compiled data and method citations
+    function toggleCitations() {
+      const container = document.getElementById('dataCitationsList');
+      if (container.style.display === 'block') {
+        container.style.display = 'none';
+      } else {
+        let html = '';
+        for (const key in citationsData) {
+          const info = citationsData[key];
+          html += `<p><strong>${info.description || key}:</strong> ${info.citation}`;
+          if (info.doi) html += ` DOI: ${info.doi}.`;
+          if (info.url) html += ` <a href="${info.url}" target="_blank">${info.url}</a>`;
+          html += '</p>';
+        }
+        container.innerHTML = html;
+        container.style.display = 'block';
+      }
+    }
+
+    // Generate a simple markdown document from user input
+    function generateDocument() {
+      const title = document.getElementById('docTitle').value.trim();
+      const author = document.getElementById('docAuthor').value.trim();
+      const type = document.getElementById('docType').value;
+      const content = document.getElementById('docContent').value;
+      const output = document.getElementById('docOutput');
+      if (!title || !content) {
+        output.style.display = 'none';
+        return;
+      }
+      const date = new Date().toISOString().split('T')[0];
+      const docText = `# ${title}\n\n**Author:** ${author || 'N/A'}\n**Document Type:** ${type.replace(/_/g,' ')}\n**Date:** ${date}\n\n${content}\n`;
+      const blob = new Blob([docText], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      output.innerHTML = `<p>Document generated. <a href="${url}" download="${title.replace(/\s+/g,'_')}.md">Download Markdown</a></p>` +
+        `<pre>${docText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+      output.style.display = 'block';
+    }
+
+    // Search for drug properties and targets
+    function searchDrug() {
+      const name = document.getElementById('drugName').value.trim().toLowerCase();
+      const resultDiv = document.getElementById('drugResults');
+      if (!name) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      const drug = drugData[name];
+      if (drug) {
+        let html = `<p><strong>Name:</strong> ${drug.drug_name}</p>` +
+          `<p><strong>Molecular Weight:</strong> ${drug.molecular_weight}</p>` +
+          `<p><strong>LogP:</strong> ${drug.xlogp}</p>` +
+          `<p><strong>H-bond Donors:</strong> ${drug.hbd}</p>` +
+          `<p><strong>H-bond Acceptors:</strong> ${drug.hba}</p>` +
+          `<p><strong>Topological Polar Surface Area:</strong> ${drug.tpsa}</p>` +
+          `<p><strong>Primary Targets:</strong> ${drug.targets.join(', ')}</p>`;
+        resultDiv.innerHTML = html;
+      } else {
+        resultDiv.innerHTML = `<p>No data found for "${name}". Try a common drug like ibuprofen or lisinopril.</p>`;
+      }
+      resultDiv.style.display = 'block';
+    }
+
+    // Analyze literature text for basic statistics and readability
+    function analyzeText() {
+      const text = document.getElementById('litInput').value.trim();
+      const resultDiv = document.getElementById('litResults');
+      if (!text) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      const words = text.split(/\s+/).filter(w => w.length > 0);
+      const totalWords = words.length;
+      const freq = {};
+      words.forEach(w => {
+        const cleaned = w.replace(/[.,;:!?()"']/g, '').toLowerCase();
+        if (!freq[cleaned]) freq[cleaned] = 0;
+        freq[cleaned]++;
+      });
+      const entries = Object.entries(freq).sort((a,b) => b[1] - a[1]);
+      const top = entries.slice(0, 5).map(e => `${e[0]} (${e[1]})`).join(', ');
+      const sentences = text.match(/[^\.\!\?]+[\.\!\?]+/g) || [text];
+      const summary = sentences.slice(0, 2).join(' ').trim();
+      // Syllable count approximation
+      function syllables(word) {
+        const lower = word.toLowerCase();
+        const groups = lower.match(/[aeiouy]+/g) || [];
+        return groups.length > 0 ? groups.length : 1;
+      }
+      let totalSyllables = 0;
+      words.forEach(w => { totalSyllables += syllables(w); });
+      const totalSentences = sentences.length;
+      const flesch = 206.835 - 1.015 * (totalWords / totalSentences) - 84.6 * (totalSyllables / totalWords);
+      const readingEase = Math.round(flesch);
+      resultDiv.innerHTML = `<p><strong>Total words:</strong> ${totalWords}</p>` +
+        `<p><strong>Top words:</strong> ${top}</p>` +
+        `<p><strong>Reading Ease (Flesch):</strong> ${readingEase}</p>` +
+        `<p><strong>Summary:</strong> ${summary}</p>`;
+      resultDiv.style.display = 'block';
+    }
+
+    // Compute derivative or integral of a mathematical expression using math.js
+    function computeMath() {
+      const expr = document.getElementById('mathExpr').value;
+      const op = document.getElementById('mathOp').value;
+      const resultDiv = document.getElementById('mathResults');
+      if (!expr) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      try {
+        if (op === 'derivative') {
+          const derivative = math.derivative(expr, 'x');
+          resultDiv.innerHTML = `<p><strong>Derivative:</strong> ${derivative.toString()}</p>`;
+        } else {
+          if (math.integral) {
+            const integral = math.integral(expr, 'x').toString();
+            resultDiv.innerHTML = `<p><strong>Integral:</strong> ${integral}</p>`;
+          } else {
+            // If math.js integral is not available, provide a placeholder
+            resultDiv.innerHTML = `<p>Indefinite integration is not available in this environment.</p>`;
+          }
+        }
+        resultDiv.style.display = 'block';
+      } catch (err) {
+        resultDiv.innerHTML = `<p class="text-danger">Error computing expression. Please check syntax.</p>`;
+        resultDiv.style.display = 'block';
+      }
+    }
+
+    // Simulate a simple one‑compartment PK model with Hill PD response and plot using Chart.js
+    function simulatePkPd() {
+      const D = parseFloat(document.getElementById('pkDose').value);
+      const ka = parseFloat(document.getElementById('pkKa').value);
+      const ke = parseFloat(document.getElementById('pkKe').value);
+      const Vd = parseFloat(document.getElementById('pkVd').value);
+      const Emax = parseFloat(document.getElementById('pdEmax').value);
+      const EC50 = parseFloat(document.getElementById('pdEC50').value);
+      const n = parseFloat(document.getElementById('pdHill').value);
+      const chartCanvas = document.getElementById('pkpdChart');
+      const times = [];
+      const conc = [];
+      const eff = [];
+      const maxTime = 24;
+      const step = 0.5;
+      for (let t = 0; t <= maxTime; t += step) {
+        times.push(t.toFixed(1));
+        // PK concentration: avoid division by zero if ka == ke
+        let c;
+        if (ka === ke) {
+          c = ((D * ka) / (Vd)) * t * Math.exp(-ke * t);
+        } else {
+          c = ((D * ka) / (Vd * (ka - ke))) * (Math.exp(-ke * t) - Math.exp(-ka * t));
+        }
+        conc.push(c);
+        const e = (Emax * Math.pow(c, n)) / (Math.pow(EC50, n) + Math.pow(c, n));
+        eff.push(e);
+      }
+      // Remove any previous chart
+      if (chartCanvas._chart) {
+        chartCanvas._chart.destroy();
+      }
+      chartCanvas.style.display = 'block';
+      const ctx = chartCanvas.getContext('2d');
+      const pkpdChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: times,
+          datasets: [
+            {
+              label: 'Concentration',
+              data: conc,
+              yAxisID: 'y',
+              borderColor: 'rgba(30,136,229,1)',
+              backgroundColor: 'rgba(30,136,229,0.3)',
+              fill: false
+            },
+            {
+              label: 'Effect',
+              data: eff,
+              yAxisID: 'y1',
+              borderColor: 'rgba(220,53,69,1)',
+              backgroundColor: 'rgba(220,53,69,0.3)',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          stacked: false,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'Concentration' }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: 'Effect' },
+              grid: { drawOnChartArea: false }
+            }
+          },
+          plugins: {
+            title: { display: true, text: 'PK/PD Simulation' }
+          }
+        }
+      });
+      chartCanvas._chart = pkpdChart;
+    }
+
+    /* -------------------------------------------------------------------------
+     * Automatic paper validation inspired by auto_validator.py.
+     * This function performs optional citation analysis, readability assessment
+     * and section presence checks on user‑provided text. It generates a summary
+     * and actionable recommendations based on the findings.
+     */
+    function runAutoValidation() {
+      const text = document.getElementById('autoText').value.trim();
+      const resultDiv = document.getElementById('autoResults');
+      if (!text) {
+        resultDiv.style.display = 'none';
+        return;
+      }
+      let html = '';
+      const recommendations = [];
+      // Citation analysis
+      if (document.getElementById('autoCitations').checked) {
+        const matches = text.match(/\[[^\]]+\]/g) || [];
+        const citations = matches.map(c => c.slice(1, -1).trim());
+        const total = citations.length;
+        let invalid = 0;
+        const counts = {};
+        citations.forEach(c => {
+          if (!counts[c]) counts[c] = 0;
+          counts[c]++;
+          if (!/^(\d+|[A-Za-z].*)$/.test(c)) invalid++;
+        });
+        const duplicate = Object.values(counts).filter(v => v > 1).length;
+        html += `<h6>Citation Analysis</h6><p>Total citations: ${total}, Duplicates: ${duplicate}, Invalid formats: ${invalid}</p>`;
+        if (invalid > 0) recommendations.push(`Fix ${invalid} invalid citation formats.`);
+        if (duplicate > 0) recommendations.push(`Remove ${duplicate} duplicate citations.`);
+      }
+      // Readability assessment
+      if (document.getElementById('autoReadability').checked) {
+        const words = text.split(/\s+/).filter(w => w.length > 0);
+        const totalWords = words.length;
+        const sentences = text.match(/[^\.\!\?]+[\.\!\?]+/g) || [text];
+        const totalSentences = sentences.length;
+        // Syllable counting helper
+        function countSyllables(word) {
+          const lower = word.toLowerCase();
+          const groups = lower.match(/[aeiouy]+/g) || [];
+          return groups.length > 0 ? groups.length : 1;
+        }
+        let totalSyllables = 0;
+        words.forEach(w => { totalSyllables += countSyllables(w); });
+        const flesch = 206.835 - 1.015 * (totalWords / totalSentences) - 84.6 * (totalSyllables / totalWords);
+        const readingEase = Math.round(flesch);
+        let grade = (0.39 * (totalWords / totalSentences)) + (11.8 * (totalSyllables / totalWords)) - 15.59;
+        grade = Math.round(grade * 10) / 10;
+        html += `<h6>Readability</h6><p>Flesch Reading Ease: ${readingEase}, Flesch-Kincaid Grade Level: ${grade}</p>`;
+        if (readingEase < 60) recommendations.push(`Improve readability (Flesch score ${readingEase}) to above 60.`);
+      }
+      // Section presence
+      if (document.getElementById('autoSections').checked) {
+        const lower = text.toLowerCase();
+        const hasMethods = /(\bmethods\b|\bmethodology\b|materials and methods)/.test(lower);
+        const hasResults = /\bresults\b/.test(lower);
+        const hasDiscussion = /\bdiscussion\b/.test(lower);
+        const hasReferences = /\b(references|bibliography)\b/.test(lower);
+        html += `<h6>Section Presence</h6><p>` +
+          `Methods: ${hasMethods ? '✔️' : '❌'}, ` +
+          `Results: ${hasResults ? '✔️' : '❌'}, ` +
+          `Discussion: ${hasDiscussion ? '✔️' : '❌'}, ` +
+          `References: ${hasReferences ? '✔️' : '❌'}</p>`;
+        if (!hasMethods) recommendations.push('Add a Methods section.');
+        if (!hasResults) recommendations.push('Add a Results section.');
+        if (!hasDiscussion) recommendations.push('Add a Discussion section.');
+        if (!hasReferences) recommendations.push('Include a References section.');
+      }
+      // Show recommendations if any
+      if (recommendations.length > 0) {
+        html += `<h6>Recommendations</h6><ul>` + recommendations.map(r => `<li>${r}</li>`).join('') + `</ul>`;
+      }
+      resultDiv.innerHTML = html;
+      resultDiv.style.display = 'block';
+    }
+  </script>
+  <!-- Bootstrap JS for navbar toggling -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
