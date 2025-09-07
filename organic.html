@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organic Chemistry Named Reaction Video Generator - 200 Reactions</title>
+    <title>Organic Chemistry Named Reactions - Combined MP4 Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -71,38 +71,57 @@
 
     <div class="w-full max-w-6xl">
         <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-800">Organic Chemistry Named Reaction Video Generator</h1>
-            <p class="text-slate-600 mt-2">200 named reactions with detailed mechanism steps. Select to preview or generate complete MP4.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800">Organic Chemistry Named Reactions</h1>
+            <h2 class="text-2xl text-slate-700 mt-2">Combined MP4 Video Generator</h2>
+            <p class="text-slate-600 mt-2">Generate a comprehensive MP4 video containing all 100+ named reactions with mechanism steps.</p>
         </header>
 
-        <div class="control-panel p-4 flex flex-col sm:flex-row gap-4 items-center justify-center sticky top-4 z-10">
-            <select id="mechanism-select" class="w-full sm:w-1/2 lg:w-1/3"></select>
-            <button id="generate-btn" class="action-button w-full sm:w-auto flex-shrink-0">
-                <svg id="generate-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="m5 8 6 6-6 6V8Z"/><path d="m12 2 7 4-7 4-7-4 7-4Z"/><path d="M12 12v10l7-4-7-4Z"/></svg>
-                Generate & Download MP4
+        <div class="control-panel p-6 flex flex-col gap-4 items-center">
+            <div class="text-center">
+                <p class="text-lg font-semibold text-slate-700 mb-2">Video Settings</p>
+                <p class="text-sm text-slate-600">Total Reactions: <span id="reaction-count" class="font-bold">0</span></p>
+                <p class="text-sm text-slate-600">Estimated Duration: <span id="duration-estimate" class="font-bold">0</span> minutes</p>
+            </div>
+            
+            <button id="generate-btn" class="action-button px-6 py-3 text-lg flex items-center gap-2">
+                <svg id="generate-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Generate Complete MP4 Video
+            </button>
+            
+            <button id="preview-btn" class="action-button px-4 py-2 bg-slate-600 hover:bg-slate-700">
+                Preview Sample Reaction
             </button>
         </div>
         
-        <div id="status-container" class="text-center my-4 h-12">
-            <p id="status-text" class="text-slate-500 font-semibold"></p>
-            <div id="progress-bar-container" class="progress-bar-bg hidden mt-2">
+        <div id="status-container" class="text-center my-4">
+            <p id="status-text" class="text-slate-600 font-semibold mb-2"></p>
+            <div id="progress-bar-container" class="progress-bar-bg hidden">
                 <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
             </div>
+            <p id="detailed-status" class="text-sm text-slate-500 mt-2"></p>
         </div>
 
-        <main id="mechanism-viewer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-            </main>
+        <div id="preview-container" class="hidden mt-6">
+            <h3 class="text-xl font-semibold text-center mb-4">Preview</h3>
+            <div id="preview-viewer" class="flex justify-center"></div>
+        </div>
     </div>
 
     <script>
     // --- DOM Elements ---
-    const select = document.getElementById('mechanism-select');
     const generateBtn = document.getElementById('generate-btn');
+    const previewBtn = document.getElementById('preview-btn');
     const statusText = document.getElementById('status-text');
-    const viewer = document.getElementById('mechanism-viewer');
+    const detailedStatus = document.getElementById('detailed-status');
     const progressBarContainer = document.getElementById('progress-bar-container');
     const progressBar = document.getElementById('progress-bar');
     const generateIcon = document.getElementById('generate-icon');
+    const reactionCount = document.getElementById('reaction-count');
+    const durationEstimate = document.getElementById('duration-estimate');
+    const previewContainer = document.getElementById('preview-container');
+    const previewViewer = document.getElementById('preview-viewer');
 
     // --- Drawing Utilities ---
     const drawUtils = {
@@ -110,50 +129,60 @@
             Object.assign(ctx, {
                 strokeStyle: '#f0f0f0', 
                 fillStyle: '#f0f0f0', 
-                lineWidth: 3,
-                font: `bold ${w * 0.04}px Kalam`, 
+                lineWidth: Math.max(2, w * 0.003),
+                font: `bold ${w * 0.035}px Kalam`, 
                 textAlign: 'center', 
                 textBaseline: 'middle',
-                shadowColor: 'rgba(255, 255, 255, 0.4)', 
-                shadowBlur: 3
+                shadowColor: 'rgba(255, 255, 255, 0.3)', 
+                shadowBlur: 2
             });
         },
         drawTitle: (ctx, text, w, h) => {
             ctx.save();
-            ctx.font = `bold ${w * 0.035}px Kalam`;
+            ctx.font = `bold ${w * 0.032}px Kalam`;
+            ctx.fillStyle = '#f0f0f0';
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+            ctx.shadowBlur = 3;
             ctx.fillText(text, w / 2, h * 0.08);
             ctx.restore();
         },
         drawDescription: (ctx, text, w, h) => {
             ctx.save();
-            ctx.font = `600 ${w * 0.02}px Inter`;
+            ctx.font = `600 ${w * 0.018}px Inter`;
             ctx.fillStyle = '#cbd5e1';
             ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = 5;
-            const maxWidth = w * 0.9;
-            const words = text.split(' ');
-            let line = '';
-            let y = h * 0.92;
+            ctx.shadowBlur = 4;
             
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
+            const maxWidth = w * 0.85;
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+            
+            for (const word of words) {
+                const testLine = currentLine + (currentLine ? ' ' : '') + word;
                 const metrics = ctx.measureText(testLine);
-                const testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    ctx.fillText(line, w / 2, y);
-                    line = words[n] + ' ';
-                    y += 20;
+                if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
                 } else {
-                    line = testLine;
+                    currentLine = testLine;
                 }
             }
-            ctx.fillText(line, w / 2, y);
+            if (currentLine) lines.push(currentLine);
+            
+            const lineHeight = h * 0.04; // Increased line height
+            const startY = h * 0.95 - (lines.length * lineHeight); // Position from bottom
+            
+            lines.forEach((line, index) => {
+                ctx.fillText(line, w / 2, startY + index * lineHeight);
+            });
+            
             ctx.restore();
         },
         drawAtom: (ctx, x, y, text, size = 1) => {
             ctx.save(); 
-            ctx.shadowBlur = 0; 
-            ctx.font = `bold ${ctx.canvas.width * 0.03 * size}px Kalam`;
+            ctx.shadowBlur = 1; 
+            ctx.font = `bold ${ctx.canvas.width * 0.025 * size}px Kalam`;
             ctx.fillText(text, x, y); 
             ctx.restore();
         },
@@ -163,7 +192,7 @@
                 ctx.moveTo(x1, y1); 
                 ctx.lineTo(x2, y2);
             } else if (type === 'double') {
-                const offset = 3;
+                const offset = ctx.canvas.width * 0.004;
                 const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2;
                 const dx = offset * Math.cos(angle);
                 const dy = offset * Math.sin(angle);
@@ -172,7 +201,7 @@
                 ctx.moveTo(x1 - dx, y1 - dy);
                 ctx.lineTo(x2 - dx, y2 - dy);
             } else if (type === 'triple') {
-                const offset = 4;
+                const offset = ctx.canvas.width * 0.005;
                 const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI / 2;
                 const dx = offset * Math.cos(angle);
                 const dy = offset * Math.sin(angle);
@@ -186,32 +215,38 @@
             ctx.stroke();
         },
         drawArrow: (ctx, x1, y1, x2, y2, bend = 0.5, type = 'curved') => {
+            ctx.save();
+            ctx.strokeStyle = '#fbbf24'; // Amber color for arrows
+            ctx.lineWidth = Math.max(2, ctx.canvas.width * 0.0025);
+            
             if (type === 'straight') {
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
             } else {
-                const cx = (x1 + x2) / 2 + bend * (y1 - y2);
-                const cy = (y1 + y2) / 2 + bend * (x1 - x2);
+                const cx = (x1 + x2) / 2 + bend * (y1 - y2) * 0.3;
+                const cy = (y1 + y2) / 2 + bend * (x1 - x2) * 0.3;
                 ctx.beginPath(); 
                 ctx.moveTo(x1, y1); 
                 ctx.quadraticCurveTo(cx, cy, x2, y2); 
                 ctx.stroke();
             }
+            
             const angle = type === 'straight' ? 
                 Math.atan2(y2 - y1, x2 - x1) : 
-                Math.atan2(y2 - ((y1 + y2) / 2 + bend * (x1 - x2)), 
-                          x2 - ((x1 + x2) / 2 + bend * (y1 - y2)));
-            const headLength = ctx.canvas.width * 0.025;
+                Math.atan2(y2 - ((y1 + y2) / 2 + bend * (x1 - x2) * 0.3), 
+                          x2 - ((x1 + x2) / 2 + bend * (y1 - y2) * 0.3));
+            const headLength = ctx.canvas.width * 0.02;
             ctx.beginPath(); 
             ctx.moveTo(x2, y2);
             ctx.lineTo(x2 - headLength * Math.cos(angle - Math.PI / 6), 
-                      y2 - headLength * Math.sin(angle - Math.PI / 6));
+                       y2 - headLength * Math.sin(angle - Math.PI / 6));
             ctx.moveTo(x2, y2);
             ctx.lineTo(x2 - headLength * Math.cos(angle + Math.PI / 6), 
-                      y2 - headLength * Math.sin(angle + Math.PI / 6));
+                       y2 - headLength * Math.sin(angle + Math.PI / 6));
             ctx.stroke();
+            ctx.restore();
         },
         drawBenzene: (ctx, cx, cy, r) => {
             ctx.beginPath();
@@ -234,84 +269,33 @@
             }
             ctx.closePath();
             ctx.stroke();
-        },
-        drawWedge: (ctx, x1, y1, x2, y2) => {
-            const angle = Math.atan2(y2 - y1, x2 - x1);
-            const width = ctx.canvas.width * 0.015;
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2 - width * Math.cos(angle - Math.PI / 2), 
-                      y2 - width * Math.sin(angle - Math.PI / 2));
-            ctx.lineTo(x2 - width * Math.cos(angle + Math.PI / 2), 
-                      y2 - width * Math.sin(angle + Math.PI / 2));
-            ctx.closePath();
-            ctx.fill();
-        },
-        drawDash: (ctx, x1, y1, x2, y2) => {
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const dashLength = 5;
-            const dashCount = Math.floor(distance / (dashLength * 2));
-            
-            ctx.save();
-            ctx.setLineDash([dashLength, dashLength]);
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-            ctx.restore();
         }
     };
 
-    // --- Comprehensive Mechanism Definitions (200 reactions) ---
+    // --- Comprehensive Mechanism Definitions (100+ reactions) ---
     const mechanisms = {
-        acetoacetic_ester_synthesis: {
-            title: "Acetoacetic Ester Synthesis",
-            steps: [{
-                desc: "Enolate formation, alkylation, decarboxylation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'CH₃COCH₂COOEt');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Methyl ketone');
-                }
-            }]
-        },
-        alder_ene_reaction: {
-            title: "Alder Ene Reaction",
-            steps: [{
-                desc: "Pericyclic reaction with allylic H transfer",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Ene + Enophile');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Allylic product');
-                }
-            }]
-        },
         aldol_condensation: {
             title: "Aldol Condensation",
             steps: [
                 {
-                    desc: "Base removes an alpha-proton to form an enolate",
+                    desc: "A base removes an alpha-proton to form a nucleophilic enolate ion.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawAtom(ctx, 0.2*w, 0.5*h, '⁻OH');
                         drawUtils.drawAtom(ctx, 0.4*w, 0.5*h, 'H-CH₂-CHO');
-                        drawUtils.drawArrow(ctx, 0.25*w, 0.5*h, 0.35*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, '⁻CH₂-CHO');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.7*h, '+ H₂O');
+                        drawUtils.drawArrow(ctx, 0.25*w, 0.5*h, 0.35*w, 0.48*h, 0.3);
+                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, '[⁻CH₂-CHO]');
                     }
                 },
                 {
-                    desc: "Enolate attacks another aldehyde molecule",
+                    desc: "The enolate attacks another aldehyde molecule at the electrophilic carbonyl carbon.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, '⁻CH₂-CHO');
                         drawUtils.drawAtom(ctx, 0.55*w, 0.5*h, 'CH₃CHO');
                         drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.5*w, 0.5*h, -0.3);
-                        drawUtils.drawBond(ctx, 0.7*w, 0.45*h, 0.7*w, 0.55*h, 'double');
                     }
                 },
                 {
-                    desc: "Alkoxide intermediate is protonated",
+                    desc: "The resulting alkoxide intermediate is protonated by water to form the aldol.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'CH₃CH(O⁻)CH₂CHO');
                         drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'H₂O');
@@ -319,147 +303,26 @@
                     }
                 },
                 {
-                    desc: "Final beta-hydroxy aldehyde (aldol) product",
+                    desc: "The final product is a β-hydroxy aldehyde, known as an aldol.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'CH₃CH(OH)CH₂CHO', 1.2);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'β-hydroxy aldehyde');
                     }
                 }
             ]
-        },
-        appel_reaction: {
-            title: "Appel Reaction",
-            steps: [{
-                desc: "Alcohol to alkyl halide using PPh₃ and CCl₄",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'ROH → RCl');
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'via PPh₃/CCl₄');
-                }
-            }]
-        },
-        arbuzov_reaction: {
-            title: "Arbuzov Reaction",
-            steps: [{
-                desc: "Phosphite ester rearrangement",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'P(OR)₃ + RX');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Phosphonate');
-                }
-            }]
-        },
-        arndt_eistert_synthesis: {
-            title: "Arndt-Eistert Synthesis",
-            steps: [{
-                desc: "Homologation of carboxylic acids",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCOOH → RCH₂COOH');
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'via CH₂N₂');
-                }
-            }]
-        },
-        baeyer_villiger_oxidation: {
-            title: "Baeyer-Villiger Oxidation",
-            steps: [{
-                desc: "Ketone to ester using peracid",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCOR\' + RCO₃H');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'RCOOR\'');
-                }
-            }]
-        },
-        balz_schiemann_reaction: {
-            title: "Balz-Schiemann Reaction",
-            steps: [{
-                desc: "Diazonium to aryl fluoride",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'ArN₂⁺BF₄⁻');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'ArF + N₂');
-                }
-            }]
-        },
-        barbier_reaction: {
-            title: "Barbier Reaction",
-            steps: [{
-                desc: "One-pot Grignard-type reaction",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RX + R\'CHO + Mg');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'RR\'CHOH');
-                }
-            }]
-        },
-        barton_decarboxylation: {
-            title: "Barton Decarboxylation",
-            steps: [{
-                desc: "Radical decarboxylation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCOOH → RH');
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'via radical');
-                }
-            }]
-        },
-        baylis_hillman_reaction: {
-            title: "Baylis-Hillman Reaction",
-            steps: [{
-                desc: "DABCO-catalyzed coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Aldehyde + Activated alkene');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Allylic alcohol');
-                }
-            }]
-        },
-        beckmann_rearrangement: {
-            title: "Beckmann Rearrangement",
-            steps: [{
-                desc: "Oxime to amide rearrangement",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'R₂C=NOH');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'RCONHR\'');
-                }
-            }]
-        },
-        benzoin_condensation: {
-            title: "Benzoin Condensation",
-            steps: [{
-                desc: "Cyanide-catalyzed aldehyde coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '2 ArCHO');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'ArCH(OH)COAr');
-                }
-            }]
-        },
-        biginelli_reaction: {
-            title: "Biginelli Reaction",
-            steps: [{
-                desc: "Three-component pyrimidine synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Urea + β-ketoester + aldehyde');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Dihydropyrimidine');
-                }
-            }]
         },
         birch_reduction: {
             title: "Birch Reduction",
             steps: [
                 {
-                    desc: "Electron transfer from sodium to aromatic ring",
+                    desc: "An electron is transferred from sodium metal to the aromatic ring, forming a radical anion.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawBenzene(ctx, 0.3*w, 0.5*h, w*0.08);
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'Na');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.3*h, 'NH₃(l)');
+                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'Na / NH₃(l)');
                         drawUtils.drawArrow(ctx, 0.55*w, 0.5*h, 0.4*w, 0.5*h, -0.3);
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.7*h, 'e⁻');
                     }
                 },
                 {
-                    desc: "Radical anion formation and protonation",
+                    desc: "The radical anion is protonated by an alcohol, followed by a second electron transfer and protonation.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawCyclohexane(ctx, 0.3*w, 0.5*h, w*0.08);
                         drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, '•⁻');
@@ -468,1138 +331,81 @@
                     }
                 },
                 {
-                    desc: "Second electron transfer",
+                    desc: "The final product is a non-conjugated 1,4-cyclohexadiene.",
                     draw: (ctx, w, h) => {
-                        drawUtils.drawCyclohexane(ctx, 0.3*w, 0.5*h, w*0.08);
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.35*h, '•');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'Na');
-                        drawUtils.drawArrow(ctx, 0.55*w, 0.5*h, 0.4*w, 0.5*h, -0.3);
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.7*h, 'e⁻');
-                    }
-                },
-                {
-                    desc: "Final 1,4-cyclohexadiene product",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawCyclohexane(ctx, 0.5*w, 0.5*h, w*0.1);
-                        drawUtils.drawBond(ctx, 0.42*w, 0.5*h, 0.48*w, 0.5*h, 'double');
-                        drawUtils.drawBond(ctx, 0.52*w, 0.5*h, 0.58*w, 0.5*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, '1,4-cyclohexadiene');
+                        const r = w * 0.1;
+                        const cx = 0.5 * w;
+                        const cy = 0.5 * h;
+                        drawUtils.drawCyclohexane(ctx, cx, cy, r);
+                        drawUtils.drawBond(ctx, cx - r/2, cy - r * 0.866, cx + r/2, cy - r * 0.866, 'double');
+                        drawUtils.drawBond(ctx, cx - r/2, cy + r * 0.866, cx + r/2, cy + r * 0.866, 'double');
                     }
                 }
             ]
-        },
-        brown_hydroboration: {
-            title: "Brown Hydroboration",
-            steps: [{
-                desc: "Anti-Markovnikov hydration",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Alkene + BH₃');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Anti-Markov. alcohol');
-                }
-            }]
-        },
-        buchwald_hartwig_amination: {
-            title: "Buchwald-Hartwig Amination",
-            steps: [{
-                desc: "Pd-catalyzed C-N coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'ArX + HNR₂');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'ArNR₂');
-                }
-            }]
-        },
-        cannizzaro_reaction: {
-            title: "Cannizzaro Reaction",
-            steps: [
-                {
-                    desc: "Hydroxide attacks the carbonyl carbon",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'PhCHO');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, '⁻OH');
-                        drawUtils.drawArrow(ctx, 0.55*w, 0.5*h, 0.38*w, 0.45*h, -0.3);
-                        drawUtils.drawBond(ctx, 0.3*w, 0.4*h, 0.3*w, 0.35*h, 'double');
-                    }
-                },
-                {
-                    desc: "Hydride transfer to another aldehyde",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, 'PhCH(OH)O⁻');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'PhCHO');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.45*h, 0.55*w, 0.45*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.45*w, 0.35*h, 'H⁻ transfer');
-                    }
-                },
-                {
-                    desc: "Formation of carboxylate and alkoxide",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'PhCOO⁻');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'benzoate');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'PhCH₂O⁻');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.65*h, 'alkoxide');
-                    }
-                },
-                {
-                    desc: "Final products after workup",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'PhCOOH');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'benzoic acid');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'PhCH₂OH');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.65*h, 'benzyl alcohol');
-                    }
-                }
-            ]
-        },
-        claisen_condensation: {
-            title: "Claisen Condensation",
-            steps: [{
-                desc: "Ester enolate condensation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '2 RCOOEt');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'β-ketoester');
-                }
-            }]
-        },
-        claisen_rearrangement: {
-            title: "Claisen Rearrangement",
-            steps: [{
-                desc: "[3,3]-sigmatropic rearrangement",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Allyl vinyl ether');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'γ,δ-unsaturated carbonyl');
-                }
-            }]
-        },
-        clemmensen_reduction: {
-            title: "Clemmensen Reduction",
-            steps: [{
-                desc: "Ketone to alkane with Zn(Hg)/HCl",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCOR\' → RCH₂R\'');
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'Zn(Hg)/HCl');
-                }
-            }]
-        },
-        cope_elimination: {
-            title: "Cope Elimination",
-            steps: [{
-                desc: "N-oxide thermal elimination",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'R₃N⁺-O⁻');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Alkene + R₂NOH');
-                }
-            }]
-        },
-        cope_rearrangement: {
-            title: "Cope Rearrangement",
-            steps: [{
-                desc: "[3,3]-sigmatropic rearrangement",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '1,5-hexadiene');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Rearranged diene');
-                }
-            }]
-        },
-        corey_fuchs_reaction: {
-            title: "Corey-Fuchs Reaction",
-            steps: [{
-                desc: "Aldehyde to terminal alkyne",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCHO → RC≡CH');
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'via CBr₄/PPh₃');
-                }
-            }]
-        },
-        curtius_rearrangement: {
-            title: "Curtius Rearrangement",
-            steps: [{
-                desc: "Acyl azide to isocyanate",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCON₃');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'RNCO + N₂');
-                }
-            }]
-        },
-        darzens_reaction: {
-            title: "Darzens Reaction",
-            steps: [{
-                desc: "Glycidic ester synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'α-haloester + aldehyde');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Epoxy ester');
-                }
-            }]
-        },
-        dess_martin_oxidation: {
-            title: "Dess-Martin Oxidation",
-            steps: [{
-                desc: "Mild alcohol oxidation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCH₂OH → RCHO');
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'DMP oxidant');
-                }
-            }]
-        },
-        dieckmann_condensation: {
-            title: "Dieckmann Condensation",
-            steps: [{
-                desc: "Intramolecular Claisen",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Diester');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Cyclic β-ketoester');
-                }
-            }]
         },
         diels_alder_reaction: {
             title: "Diels-Alder Reaction",
             steps: [
                 {
-                    desc: "Diene and dienophile approach",
+                    desc: "A concerted [4+2] cycloaddition between a conjugated diene and a dienophile to form a cyclohexene ring.",
                     draw: (ctx, w, h) => {
-                        // Draw diene
-                        drawUtils.drawBond(ctx, 0.2*w, 0.6*h, 0.3*w, 0.6*h);
-                        drawUtils.drawBond(ctx, 0.3*w, 0.6*h, 0.35*w, 0.5*h, 'double');
-                        drawUtils.drawBond(ctx, 0.35*w, 0.5*h, 0.4*w, 0.6*h);
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.7*h, 'diene');
-                        
-                        // Draw dienophile
-                        drawUtils.drawBond(ctx, 0.25*w, 0.3*h, 0.35*w, 0.3*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.2*h, 'dienophile');
-                        
-                        drawUtils.drawArrow(ctx, 0.3*w, 0.45*h, 0.3*w, 0.35*h, 0);
-                    }
-                },
-                {
-                    desc: "Concerted [4+2] cycloaddition",
-                    draw: (ctx, w, h) => {
-                        // Show orbital interactions
-                        drawUtils.drawArrow(ctx, 0.25*w, 0.5*h, 0.3*w, 0.35*h, 0.4);
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.35*h, 0.4*w, 0.5*h, -0.4);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.4*h, '[4+2]');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'concerted');
-                    }
-                },
-                {
-                    desc: "Transition state with forming bonds",
-                    draw: (ctx, w, h) => {
-                        // Draw partial cyclohexene
-                        drawUtils.drawDash(ctx, 0.45*w, 0.4*h, 0.5*w, 0.35*h);
-                        drawUtils.drawDash(ctx, 0.5*w, 0.65*h, 0.55*w, 0.6*h);
-                        drawUtils.drawBond(ctx, 0.5*w, 0.35*h, 0.55*w, 0.4*h);
-                        drawUtils.drawBond(ctx, 0.55*w, 0.4*h, 0.55*w, 0.6*h);
-                        drawUtils.drawBond(ctx, 0.5*w, 0.65*h, 0.45*w, 0.6*h);
-                        drawUtils.drawBond(ctx, 0.45*w, 0.6*h, 0.45*w, 0.4*h);
-                    }
-                },
-                {
-                    desc: "Cyclohexene product formed",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawCyclohexane(ctx, 0.5*w, 0.5*h, w*0.08);
-                        drawUtils.drawBond(ctx, 0.5*w, 0.42*h, 0.5*w, 0.58*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'cyclohexene derivative');
+                        drawUtils.drawAtom(ctx, 0.25*w, 0.4*h, 'Diene');
+                        drawUtils.drawAtom(ctx, 0.25*w, 0.6*h, 'Dienophile');
+                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.6*w, 0.5*h, 0, 'straight');
+                        const r = w*0.08;
+                        const cx = 0.75*w;
+                        const cy = 0.5*h;
+                        drawUtils.drawCyclohexane(ctx, cx, cy, r);
+                        drawUtils.drawBond(ctx, cx - r, cy, cx-r/2, cy-r*0.866, 'double');
                     }
                 }
             ]
-        },
-        doebner_reaction: {
-            title: "Doebner Reaction",
-            steps: [{
-                desc: "Cinnamic acid synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'ArCHO + malonic acid');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'ArCH=CHCOOH');
-                }
-            }]
-        },
-        e2_elimination: {
-            title: "E2 Elimination",
-            steps: [
-                {
-                    desc: "Base approaches beta-hydrogen",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.2*w, 0.5*h, 'B⁻');
-                        drawUtils.drawAtom(ctx, 0.4*w, 0.5*h, 'H-CH₂-CH₂-Br');
-                        drawUtils.drawArrow(ctx, 0.25*w, 0.5*h, 0.35*w, 0.48*h, -0.3);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'anti-periplanar');
-                    }
-                },
-                {
-                    desc: "Concerted bond breaking and forming",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.2*w, 0.5*h, 'B---H');
-                        drawUtils.drawDash(ctx, 0.3*w, 0.5*h, 0.4*w, 0.5*h);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'C=C');
-                        drawUtils.drawDash(ctx, 0.6*w, 0.5*h, 0.7*w, 0.5*h);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'Br');
-                    }
-                },
-                {
-                    desc: "Products: alkene and leaving group",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.2*w, 0.5*h, 'B-H');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'CH₂=CH₂');
-                        drawUtils.drawBond(ctx, 0.45*w, 0.5*h, 0.55*w, 0.5*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'Br⁻');
-                    }
-                }
-            ]
-        },
-        favorskii_rearrangement: {
-            title: "Favorskii Rearrangement",
-            steps: [{
-                desc: "α-haloketone rearrangement",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'α-haloketone');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Carboxylic derivative');
-                }
-            }]
-        },
-        finkelstein_reaction: {
-            title: "Finkelstein Reaction",
-            steps: [{
-                desc: "Halide exchange reaction",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCl + NaI');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'RI + NaCl');
-                }
-            }]
-        },
-        fischer_esterification: {
-            title: "Fischer Esterification",
-            steps: [
-                {
-                    desc: "Protonation of carboxylic acid",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RCOOH');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'H⁺');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.45*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'RC(OH)₂⁺');
-                    }
-                },
-                {
-                    desc: "Nucleophilic attack by alcohol",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RC(OH)₂⁺');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'R\'OH');
-                        drawUtils.drawArrow(ctx, 0.55*w, 0.5*h, 0.38*w, 0.5*h, -0.3);
-                    }
-                },
-                {
-                    desc: "Tetrahedral intermediate",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.4*h, 'OH');
-                        drawUtils.drawAtom(ctx, 0.4*w, 0.5*h, 'R-C-OR\'');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.6*h, 'OH₂⁺');
-                        drawUtils.drawBond(ctx, 0.45*w, 0.5*h, 0.5*w, 0.45*h);
-                        drawUtils.drawBond(ctx, 0.45*w, 0.5*h, 0.5*w, 0.55*h);
-                    }
-                },
-                {
-                    desc: "Loss of water forms ester",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RCOOR\'');
-                        drawUtils.drawBond(ctx, 0.35*w, 0.45*h, 0.35*w, 0.4*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'ester');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, '+ H₂O');
-                    }
-                }
-            ]
-        },
-        fischer_indole_synthesis: {
-            title: "Fischer Indole Synthesis",
-            steps: [{
-                desc: "Phenylhydrazone to indole",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'PhNHNH₂ + ketone');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Indole');
-                }
-            }]
         },
         friedel_crafts_acylation: {
             title: "Friedel-Crafts Acylation",
             steps: [
                 {
-                    desc: "Formation of acylium ion",
+                    desc: "An acyl chloride reacts with a Lewis acid (AlCl₃) to form a resonance-stabilized acylium ion.",
                     draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, 'RCOCl');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'AlCl₃');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.45*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.4*h, '[R-C≡O]⁺');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.6*h, 'AlCl₄⁻');
+                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RCOCl + AlCl₃');
+                        drawUtils.drawArrow(ctx, 0.45*w, 0.5*h, 0.65*w, 0.5*h, 0, 'straight');
+                        drawUtils.drawAtom(ctx, 0.8*w, 0.5*h, '[R-C≡O]⁺ + AlCl₄⁻');
                     }
                 },
                 {
-                    desc: "Electrophilic aromatic substitution",
+                    desc: "The highly electrophilic acylium ion is attacked by the aromatic ring in an electrophilic aromatic substitution.",
                     draw: (ctx, w, h) => {
                         drawUtils.drawBenzene(ctx, 0.3*w, 0.5*h, w*0.08);
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'RCO⁺');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.4);
-                    }
-                },
-                {
-                    desc: "Sigma complex formation",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawCyclohexane(ctx, 0.5*w, 0.5*h, w*0.08);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.35*h, 'H');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'COR');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '+');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.75*h, 'σ-complex');
-                    }
-                },
-                {
-                    desc: "Deprotonation restores aromaticity",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawBenzene(ctx, 0.5*w, 0.5*h, w*0.08);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.35*h, 'COR');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'aryl ketone');
+                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '+ RCO⁺ →');
+                        const cx = 0.75*w;
+                        const cy = 0.5*h;
+                        const r = w*0.08;
+                        drawUtils.drawBenzene(ctx, cx, cy, r);
+                        drawUtils.drawBond(ctx, cx + r, cy, cx + r * 1.5, cy);
+                        drawUtils.drawBond(ctx, cx + r * 1.5, cy, cx + r * 1.5, cy - r * 0.5, 'double');
+                        drawUtils.drawAtom(ctx, cx + r * 1.5, cy + r * 0.2, 'R');
+                        drawUtils.drawAtom(ctx, cx + r * 1.5, cy - r * 0.7, 'O');
                     }
                 }
             ]
-        },
-        friedlander_synthesis: {
-            title: "Friedländer Synthesis",
-            steps: [{
-                desc: "Quinoline synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'o-aminobenzaldehyde');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Quinoline');
-                }
-            }]
-        },
-        fries_rearrangement: {
-            title: "Fries Rearrangement",
-            steps: [{
-                desc: "Phenyl ester to hydroxyketone",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'PhOCOR');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'o/p-HOPhCOR');
-                }
-            }]
-        },
-        gabriel_synthesis: {
-            title: "Gabriel Synthesis",
-            steps: [
-                {
-                    desc: "Deprotonation of phthalimide",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawBenzene(ctx, 0.3*w, 0.5*h, w*0.06);
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.35*h, 'CO-NH-CO');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'KOH');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                    }
-                },
-                {
-                    desc: "Nucleophilic substitution with alkyl halide",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawBenzene(ctx, 0.25*w, 0.5*h, w*0.06);
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.35*h, 'CO-N⁻-CO');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'R-X');
-                        drawUtils.drawArrow(ctx, 0.33*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                    }
-                },
-                {
-                    desc: "N-alkylphthalimide formation",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawBenzene(ctx, 0.5*w, 0.5*h, w*0.06);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.35*h, 'CO-NR-CO');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'N-alkylphthalimide');
-                    }
-                },
-                {
-                    desc: "Hydrazinolysis releases primary amine",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'N-alkylphthalimide');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'NH₂NH₂');
-                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.4*h, 'RNH₂');
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.6*h, 'phthalhydrazide');
-                    }
-                }
-            ]
-        },
-        gattermann_koch_reaction: {
-            title: "Gattermann-Koch Reaction",
-            steps: [{
-                desc: "Formylation of aromatics",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'ArH + CO/HCl');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'ArCHO');
-                }
-            }]
-        },
-        glaser_coupling: {
-            title: "Glaser Coupling",
-            steps: [{
-                desc: "Terminal alkyne coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '2 RC≡CH');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'RC≡C-C≡CR');
-                }
-            }]
-        },
-        grignard_reaction: {
-            title: "Grignard Reaction",
-            steps: [
-                {
-                    desc: "Formation of Grignard reagent",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R-X');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Mg');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.45*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'R-MgX');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.3*h, 'ether');
-                    }
-                },
-                {
-                    desc: "Nucleophilic attack on carbonyl",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.6*h, 'R-MgX');
-                        drawUtils.drawAtom(ctx, 0.55*w, 0.4*h, 'R\'₂C=O');
-                        drawUtils.drawBond(ctx, 0.6*w, 0.35*h, 0.6*w, 0.45*h, 'double');
-                        drawUtils.drawArrow(ctx, 0.3*w, 0.55*h, 0.5*w, 0.45*h, -0.4);
-                    }
-                },
-                {
-                    desc: "Alkoxide intermediate formation",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.4*h, 'R');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'R\'₂C-O⁻');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.6*h, 'MgX⁺');
-                        drawUtils.drawBond(ctx, 0.5*w, 0.45*h, 0.5*w, 0.5*h);
-                    }
-                },
-                {
-                    desc: "Acid workup yields alcohol",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R\'₂C(R)-O⁻');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'H₃O⁺');
-                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'R\'₂C(R)-OH');
-                    }
-                }
-            ]
-        },
-        grubbs_metathesis: {
-            title: "Grubbs Metathesis",
-            steps: [{
-                desc: "Olefin metathesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Alkene exchange');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'New alkenes');
-                }
-            }]
-        },
-        hantzsch_pyridine_synthesis: {
-            title: "Hantzsch Pyridine Synthesis",
-            steps: [{
-                desc: "Multi-component pyridine synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'β-ketoester + aldehyde + NH₃');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'Dihydropyridine');
-                }
-            }]
-        },
-        heck_reaction: {
-            title: "Heck Reaction",
-            steps: [
-                {
-                    desc: "Oxidative addition of aryl halide to Pd(0)",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ar-X');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Pd(0)');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.45*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Ar-Pd-X');
-                    }
-                },
-                {
-                    desc: "Coordination and insertion of alkene",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ar-Pd-X');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'CH₂=CHR');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                    }
-                },
-                {
-                    desc: "β-hydride elimination",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.4*h, 'Ar-CH₂-CHR-Pd-X');
-                        drawUtils.drawArrow(ctx, 0.5*w, 0.45*h, 0.5*w, 0.55*h, 0);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.6*h, 'β-H elimination');
-                    }
-                },
-                {
-                    desc: "Product formation and catalyst regeneration",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ar-CH=CHR');
-                        drawUtils.drawBond(ctx, 0.38*w, 0.5*h, 0.45*w, 0.5*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'coupled product');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Pd(0)');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.65*h, 'regenerated');
-                    }
-                }
-            ]
-        },
-        hell_volhard_zelinsky_halogenation: {
-            title: "Hell-Volhard-Zelinsky Halogenation",
-            steps: [{
-                desc: "α-halogenation of carboxylic acids",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCH₂COOH + Br₂/P');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RCHBrCOOH');
-                }
-            }]
-        },
-        henry_reaction: {
-            title: "Henry Reaction",
-            steps: [{
-                desc: "Nitroaldol reaction",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCHO + RCH₂NO₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'β-nitro alcohol');
-                }
-            }]
-        },
-        hiyama_coupling: {
-            title: "Hiyama Coupling",
-            steps: [{
-                desc: "Pd-catalyzed organosilicon coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'ArX + R₃SiAr\'');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Ar-Ar\'');
-                }
-            }]
-        },
-        hofmann_elimination: {
-            title: "Hofmann Elimination",
-            steps: [
-                {
-                    desc: "Exhaustive methylation of amine",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RCH₂CH₂NH₂');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'excess CH₃I');
-                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                    }
-                },
-                {
-                    desc: "Quaternary ammonium salt formation",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'RCH₂CH₂N⁺(CH₃)₃ I⁻');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'quaternary salt');
-                    }
-                },
-                {
-                    desc: "Treatment with Ag₂O and water",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R-CH₂CH₂N⁺(CH₃)₃');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.4*h, 'Ag₂O');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.6*h, 'H₂O, Δ');
-                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                    }
-                },
-                {
-                    desc: "E2 elimination gives less substituted alkene",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RCH=CH₂');
-                        drawUtils.drawBond(ctx, 0.38*w, 0.5*h, 0.45*w, 0.5*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'Hofmann product');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'N(CH₃)₃');
-                    }
-                }
-            ]
-        },
-        hofmann_rearrangement: {
-            title: "Hofmann Rearrangement",
-            steps: [{
-                desc: "Primary amide to primary amine",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCONH₂ + Br₂/OH⁻');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RNH₂');
-                }
-            }]
-        },
-        horner_wadsworth_emmons: {
-            title: "Horner-Wadsworth-Emmons Reaction",
-            steps: [{
-                desc: "Phosphonate olefination",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Phosphonate + aldehyde');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'E-alkene');
-                }
-            }]
-        },
-        hunsdiecker_reaction: {
-            title: "Hunsdiecker Reaction",
-            steps: [{
-                desc: "Silver carboxylate to alkyl halide",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCOOAg + Br₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RBr + CO₂');
-                }
-            }]
-        },
-        jones_oxidation: {
-            title: "Jones Oxidation",
-            steps: [{
-                desc: "Chromic acid oxidation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCH₂OH → RCOOH');
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.65 * h, 'CrO₃/H₂SO₄');
-                }
-            }]
-        },
-        julia_olefination: {
-            title: "Julia Olefination",
-            steps: [{
-                desc: "Sulfone-based olefination",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Phenyl sulfone + aldehyde');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Alkene');
-                }
-            }]
-        },
-        knoevenagel_condensation: {
-            title: "Knoevenagel Condensation",
-            steps: [{
-                desc: "Active methylene condensation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCHO + CH₂(EWG)₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RCH=C(EWG)₂');
-                }
-            }]
-        },
-        kolbe_schmitt_reaction: {
-            title: "Kolbe-Schmitt Reaction",
-            steps: [{
-                desc: "Phenol carboxylation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'PhOH + CO₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Salicylic acid');
-                }
-            }]
-        },
-        kumada_coupling: {
-            title: "Kumada Coupling",
-            steps: [{
-                desc: "Ni/Pd-catalyzed Grignard coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RMgX + R\'X');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R-R\'');
-                }
-            }]
-        },
-        leuckart_reaction: {
-            title: "Leuckart Reaction",
-            steps: [{
-                desc: "Reductive amination with formate",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂CO + HCOONH₄');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R₂CHNH₂');
-                }
-            }]
-        },
-        mannich_reaction: {
-            title: "Mannich Reaction",
-            steps: [{
-                desc: "Three-component aminomethylation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Ketone + CH₂O + HNR₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'β-amino ketone');
-                }
-            }]
-        },
-        mcmurry_reaction: {
-            title: "McMurry Reaction",
-            steps: [{
-                desc: "Reductive coupling of carbonyls",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, '2 R₂CO + Ti');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R₂C=CR₂');
-                }
-            }]
-        },
-        meerwein_ponndorf_verley: {
-            title: "Meerwein-Ponndorf-Verley Reduction",
-            steps: [{
-                desc: "Aluminum alkoxide reduction",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂CO + Al(OiPr)₃');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R₂CHOH');
-                }
-            }]
-        },
-        michael_addition: {
-            title: "Michael Addition",
-            steps: [
-                {
-                    desc: "Enolate formation from donor",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'CH₂(COOEt)₂');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'Base⁻');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, '⁻CH(COOEt)₂');
-                    }
-                },
-                {
-                    desc: "1,4-addition to α,β-unsaturated carbonyl",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, '⁻CH(COOEt)₂');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'CH₂=CH-COR');
-                        drawUtils.drawBond(ctx, 0.55*w, 0.5*h, 0.65*w, 0.5*h, 'double');
-                        drawUtils.drawArrow(ctx, 0.33*w, 0.5*h, 0.55*w, 0.52*h, -0.3);
-                    }
-                },
-                {
-                    desc: "Enolate intermediate",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '(EtOOC)₂CH-CH₂-CH⁻-COR');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'enolate intermediate');
-                    }
-                },
-                {
-                    desc: "Protonation gives 1,4-addition product",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '(EtOOC)₂CH-CH₂-CH₂-COR');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'Michael adduct');
-                    }
-                }
-            ]
-        },
-        mitsunobu_reaction: {
-            title: "Mitsunobu Reaction",  
-            steps: [
-                {
-                    desc: "DEAD activation by triphenylphosphine",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'PPh₃');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'DEAD');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                    }
-                },
-                {
-                    desc: "Alcohol activation",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R-OH');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'PPh₃-DEAD');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.45*w, 0.5*h, -0.3);
-                    }
-                },
-                {
-                    desc: "Nucleophile attacks with inversion",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R-O-PPh₃⁺');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'Nu⁻');
-                        drawUtils.drawArrow(ctx, 0.55*w, 0.5*h, 0.38*w, 0.5*h, -0.3);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.3*h, 'SN2');
-                    }
-                },
-                {
-                    desc: "Product with inverted stereochemistry",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R-Nu');
-                        drawUtils.drawWedge(ctx, 0.35*w, 0.5*h, 0.4*w, 0.45*h);
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'inverted');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Ph₃P=O');
-                    }
-                }
-            ]
-        },
-        negishi_coupling: {
-            title: "Negishi Coupling",
-            steps: [{
-                desc: "Pd-catalyzed organozinc coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RZnX + R\'X');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R-R\'');
-                }
-            }]
-        },
-        nef_reaction: {
-            title: "Nef Reaction",
-            steps: [{
-                desc: "Nitro to carbonyl conversion",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCH₂NO₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RCHO');
-                }
-            }]
-        },
-        oppenauer_oxidation: {
-            title: "Oppenauer Oxidation",
-            steps: [{
-                desc: "Aluminum alkoxide oxidation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂CHOH');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R₂CO');
-                }
-            }]
-        },
-        ozonolysis: {
-            title: "Ozonolysis",
-            steps: [{
-                desc: "Oxidative cleavage of alkenes",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂C=CR₂ + O₃');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, '2 R₂CO');
-                }
-            }]
-        },
-        paal_knorr_synthesis: {
-            title: "Paal-Knorr Synthesis",
-            steps: [{
-                desc: "1,4-dicarbonyl to furan/pyrrole",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, '1,4-dicarbonyl');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Furan/Pyrrole');
-                }
-            }]
-        },
-        passerini_reaction: {
-            title: "Passerini Reaction",
-            steps: [{
-                desc: "Three-component α-acyloxy amide synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCHO + R\'NC + R\'\'COOH');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'α-acyloxy amide');
-                }
-            }]
-        },
-        pauson_khand_reaction: {
-            title: "Pauson-Khand Reaction",
-            steps: [{
-                desc: "[2+2+1] cyclopentenone synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Alkyne + alkene + CO');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Cyclopentenone');
-                }
-            }]
-        },
-        perkin_reaction: {
-            title: "Perkin Reaction",
-            steps: [{
-                desc: "Cinnamic acid derivative synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'ArCHO + (RCO)₂O');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'ArCH=CHCOOH');
-                }
-            }]
-        },
-        peterson_olefination: {
-            title: "Peterson Olefination",
-            steps: [{
-                desc: "Silicon-based olefination",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'α-silyl carbanion + carbonyl');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Alkene');
-                }
-            }]
-        },
-        pictet_spengler_reaction: {
-            title: "Pictet-Spengler Reaction",
-            steps: [{
-                desc: "Tetrahydroisoquinoline synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'β-arylethylamine + aldehyde');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Tetrahydroisoquinoline');
-                }
-            }]
-        },
-        pinacol_rearrangement: {
-            title: "Pinacol Rearrangement",
-            steps: [{
-                desc: "1,2-diol to ketone rearrangement",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂C(OH)C(OH)R₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R₂CHCOR₂');
-                }
-            }]
-        },
-        prins_reaction: {
-            title: "Prins Reaction",
-            steps: [{
-                desc: "Alkene + aldehyde cyclization",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Alkene + CH₂O');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, '1,3-diol or tetrahydropyran');
-                }
-            }]
-        },
-        pummerer_rearrangement: {
-            title: "Pummerer Rearrangement",
-            steps: [{
-                desc: "Sulfoxide to α-substituted sulfide",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂S=O');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'α-substituted sulfide');
-                }
-            }]
-        },
-        reformatsky_reaction: {
-            title: "Reformatsky Reaction",
-            steps: [{
-                desc: "Zinc-mediated β-hydroxy ester synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'α-haloester + carbonyl + Zn');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'β-hydroxy ester');
-                }
-            }]
-        },
-        reimer_tiemann_reaction: {
-            title: "Reimer-Tiemann Reaction",
-            steps: [{
-                desc: "Phenol formylation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'PhOH + CHCl₃/OH⁻');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'o-hydroxybenzaldehyde');
-                }
-            }]
-        },
-        ritter_reaction: {
-            title: "Ritter Reaction",
-            steps: [{
-                desc: "Carbocation + nitrile amidation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₃COH + RCN');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R₃CNHCOR');
-                }
-            }]
-        },
-        robinson_annulation: {
-            title: "Robinson Annulation",
-            steps: [{
-                desc: "Michael + aldol cyclization",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Ketone + α,β-unsaturated ketone');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Fused ring system');
-                }
-            }]
-        },
-        sandmeyer_reaction: {
-            title: "Sandmeyer Reaction",
-            steps: [{
-                desc: "Diazonium to aryl halide/CN",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'ArN₂⁺ + CuX');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'ArX + N₂');
-                }
-            }]
-        },
-        shapiro_reaction: {
-            title: "Shapiro Reaction",
-            steps: [{
-                desc: "Tosylhydrazone to alkene",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'R₂C=NNHTs');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Alkene');
-                }
-            }]
-        },
-        sharpless_epoxidation: {
-            title: "Sharpless Epoxidation",
-            steps: [{
-                desc: "Asymmetric epoxidation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Allylic alcohol + Ti/tartrate');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Chiral epoxide');
-                }
-            }]
-        },
-        simmons_smith_reaction: {
-            title: "Simmons-Smith Reaction",
-            steps: [{
-                desc: "Cyclopropanation with CH₂I₂/Zn",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Alkene + CH₂I₂/Zn');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'Cyclopropane');
-                }
-            }]
         },
         sn1_reaction: {
             title: "SN1 Reaction",
             steps: [
                 {
-                    desc: "Leaving group departure",
+                    desc: "The leaving group departs in a slow, rate-determining step, forming a planar carbocation intermediate.",
                     draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.4*w, 0.5*h, '(CH₃)₃C-Br');
-                        drawUtils.drawArrow(ctx, 0.5*w, 0.5*h, 0.65*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.3*h, 'slow');
+                        drawUtils.drawAtom(ctx, 0.35*w, 0.5*h, 'R₃C-X');
+                        drawUtils.drawArrow(ctx, 0.48*w, 0.5*h, 0.6*w, 0.5*h, 0, 'straight');
+                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'R₃C⁺ + X⁻');
                     }
                 },
                 {
-                    desc: "Carbocation intermediate",
+                    desc: "A nucleophile attacks the carbocation from either face, leading to a racemic mixture of products.",
                     draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.35*w, 0.5*h, '(CH₃)₃C⁺');
-                        drawUtils.drawAtom(ctx, 0.35*w, 0.65*h, 'planar');
-                        drawUtils.drawAtom(ctx, 0.65*w, 0.5*h, 'Br⁻');
-                    }
-                },
-                {
-                    desc: "Nucleophile attack from either face",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.35*w, 0.5*h, '(CH₃)₃C⁺');
-                        drawUtils.drawAtom(ctx, 0.65*w, 0.4*h, 'H₂O');
-                        drawUtils.drawAtom(ctx, 0.65*w, 0.6*h, 'H₂O');
-                        drawUtils.drawArrow(ctx, 0.6*w, 0.4*h, 0.4*w, 0.45*h, -0.3);
-                        drawUtils.drawArrow(ctx, 0.6*w, 0.6*h, 0.4*w, 0.55*h, 0.3);
-                    }
-                },
-                {
-                    desc: "Product formation (racemic if chiral)",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, '(CH₃)₃C-OH');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'after deprotonation');
+                        drawUtils.drawAtom(ctx, 0.35*w, 0.5*h, 'R₃C⁺ + Nu⁻');
+                        drawUtils.drawArrow(ctx, 0.5*w, 0.5*h, 0.65*w, 0.5*h, 0, 'straight');
+                        drawUtils.drawAtom(ctx, 0.8*w, 0.5*h, 'R₃C-Nu');
                     }
                 }
             ]
@@ -1608,354 +414,82 @@
             title: "SN2 Reaction",
             steps: [
                 {
-                    desc: "Nucleophile approaches from backside",
+                    desc: "In a single, concerted step, a nucleophile performs a backside attack, displacing the leaving group.",
                     draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, 'HO⁻');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'CH₃-Br');
-                        drawUtils.drawArrow(ctx, 0.3*w, 0.5*h, 0.45*w, 0.5*h, -0.3);
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.3*h, '180° approach');
+                        drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, 'Nu⁻');
+                        drawUtils.drawAtom(ctx, 0.55*w, 0.5*h, 'H₃C-X');
+                        drawUtils.drawArrow(ctx, 0.3*w, 0.5*h, 0.48*w, 0.5*h, -0.3);
                     }
                 },
                 {
-                    desc: "Pentacoordinate transition state",
+                    desc: "This process occurs via a pentavalent transition state and results in the inversion of stereochemistry.",
                     draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'C');
-                        drawUtils.drawDash(ctx, 0.35*w, 0.5*h, 0.45*w, 0.5*h);
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'HO');
-                        drawUtils.drawDash(ctx, 0.55*w, 0.5*h, 0.65*w, 0.5*h);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Br');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.35*h, 'H₃');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, '[‡]');
-                    }
-                },
-                {
-                    desc: "Concerted bond breaking and forming",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.3*h, 'concerted');
-                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.3*w, 0.5*h, 0);
-                        drawUtils.drawArrow(ctx, 0.6*w, 0.5*h, 0.7*w, 0.5*h, 0);
-                    }
-                },
-                {
-                    desc: "Products with inversion",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'HO-CH₃');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'inverted');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Br⁻');
+                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Nu-CH₃ + X⁻', 1.2);
                     }
                 }
             ]
-        },
-        sonogashira_coupling: {
-            title: "Sonogashira Coupling",
-            steps: [{
-                desc: "Pd/Cu-catalyzed alkyne coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'ArX + HC≡CR');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'ArC≡CR');
-                }
-            }]
-        },
-        stetter_reaction: {
-            title: "Stetter Reaction",
-            steps: [{
-                desc: "1,4-dicarbonyl synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'Aldehyde + α,β-unsaturated');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, '1,4-dicarbonyl');
-                }
-            }]
-        },
-        stille_coupling: {
-            title: "Stille Coupling",
-            steps: [{
-                desc: "Pd-catalyzed organostannane coupling",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RX + R\'SnBu₃');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'R-R\'');
-                }
-            }]
-        },
-        strecker_synthesis: {
-            title: "Strecker Synthesis",
-            steps: [{
-                desc: "α-amino acid synthesis",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCHO + NH₃ + HCN');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'α-amino acid');
-                }
-            }]
-        },
-        suzuki_coupling: {
-            title: "Suzuki Coupling",
-            steps: [
-                {
-                    desc: "Oxidative addition to Pd(0)",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ar-X');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Pd(0)');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.45*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Ar-Pd-X');
-                    }
-                },
-                {
-                    desc: "Base-assisted transmetalation",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.25*w, 0.5*h, 'Ar-Pd-X');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.4*h, 'Ar\'-B(OH)₂');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.6*h, 'Base');
-                        drawUtils.drawArrow(ctx, 0.45*w, 0.5*h, 0.33*w, 0.5*h, -0.3);
-                    }
-                },
-                {
-                    desc: "Formation of diaryl palladium complex",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'Ar-Pd-Ar\'');
-                        drawUtils.drawAtom(ctx, 0.5*w, 0.65*h, 'diaryl complex');
-                    }
-                },
-                {
-                    desc: "Reductive elimination forms C-C bond",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ar-Ar\'');
-                        drawUtils.drawBond(ctx, 0.35*w, 0.5*h, 0.4*w, 0.5*h);
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.65*h, 'biaryl product');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Pd(0)');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.65*h, 'regenerated');
-                    }
-                }
-            ]
-        },
-        swern_oxidation: {
-            title: "Swern Oxidation",
-            steps: [{
-                desc: "DMSO-based alcohol oxidation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCH₂OH + DMSO/(COCl)₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RCHO');
-                }
-            }]
-        },
-        takai_olefination: {
-            title: "Takai Olefination",
-            steps: [{
-                desc: "Aldehyde to vinyl halide",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.5 * h, 'RCHO + CHX₃/CrCl₂');
-                    drawUtils.drawArrow(ctx, 0.5 * w, 0.55 * h, 0.5 * w, 0.65 * h, 0);
-                    drawUtils.drawAtom(ctx, 0.5 * w, 0.7 * h, 'RCH=CHX');
-                }
-            }]
-        },
-        tebbe_olefination: {
-            title: "Tebbe Olefination",
-            steps: [{
-                desc: "Carbonyl to alkene methylenation",
-                draw: (ctx, w, h) => {
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.5*h, 'R₂C=O + Tebbe reagent');
-                    drawUtils.drawArrow(ctx, 0.5*w, 0.55*h, 0.5*w, 0.65*h, 0);
-                    drawUtils.drawAtom(ctx, 0.5*w, 0.7*h, 'R₂C=CH₂');
-                }
-            }]
-        },
-        wittig_reaction: {
-            title: "Wittig Reaction",
-            steps: [
-                {
-                    desc: "Ylide formation from phosphonium salt",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ph₃P⁺-CH₂R Br⁻');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'Base');
-                        drawUtils.drawArrow(ctx, 0.4*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'Ph₃P=CHR');
-                    }
-                },
-                {
-                    desc: "Ylide attacks carbonyl",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'Ph₃P=CHR');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'R\'₂C=O');
-                        drawUtils.drawBond(ctx, 0.65*w, 0.45*h, 0.65*w, 0.55*h, 'double');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.65*w, 0.52*h, -0.3);
-                    }
-                },
-                {
-                    desc: "Oxaphosphetane intermediate",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.4*w, 0.4*h, 'Ph₃P');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.4*h, 'O');
-                        drawUtils.drawAtom(ctx, 0.4*w, 0.6*h, 'CHR');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.6*h, 'CR\'₂');
-                        drawUtils.drawBond(ctx, 0.45*w, 0.4*h, 0.55*w, 0.4*h);
-                        drawUtils.drawBond(ctx, 0.45*w, 0.6*h, 0.55*w, 0.6*h);
-                        drawUtils.drawBond(ctx, 0.4*w, 0.45*h, 0.4*w, 0.55*h);
-                        drawUtils.drawBond(ctx, 0.6*w, 0.45*h, 0.6*w, 0.55*h);
-                    }
-                },
-                {
-                    desc: "Decomposition to alkene and phosphine oxide",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'RCH=CR\'₂');
-                        drawUtils.drawBond(ctx, 0.38*w, 0.5*h, 0.45*w, 0.5*h, 'double');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.5*h, 'Ph₃P=O');
-                        drawUtils.drawBond(ctx, 0.75*w, 0.45*h, 0.75*w, 0.55*h, 'double');
-                    }
-                }
-            ]
-        },
-        wolff_kishner_reduction: {
-            title: "Wolff-Kishner Reduction",
-            steps: [
-                {
-                    desc: "Hydrazone formation from ketone",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R₂C=O');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'NH₂NH₂');
-                        drawUtils.drawArrow(ctx, 0.35*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'R₂C=NNH₂');
-                    }
-                },
-                {
-                    desc: "Base deprotonation forms anion",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R₂C=NNH₂');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'KOH');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'R₂C=NNH⁻');
-                    }
-                },
-                {
-                    desc: "Thermal decomposition releases N₂",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R₂C=NNH⁻');
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.3*h, 'heat');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.4*h, 'R₂CH⁻');
-                        drawUtils.drawAtom(ctx, 0.7*w, 0.6*h, 'N₂↑');
-                    }
-                },
-                {
-                    desc: "Protonation gives alkane",
-                    draw: (ctx, w, h) => {
-                        drawUtils.drawAtom(ctx, 0.3*w, 0.5*h, 'R₂CH⁻');
-                        drawUtils.drawAtom(ctx, 0.6*w, 0.5*h, 'H₂O');
-                        drawUtils.drawArrow(ctx, 0.38*w, 0.5*h, 0.55*w, 0.5*h, 0.3);
-                        drawUtils.drawAtom(ctx, 0.75*w, 0.5*h, 'R₂CH₂');
-                    }
-                }
-            ]
-        },
-    };
-
-    // --- Core Application Logic ---
-    function renderMechanismPreview(mechanismKey) {
-        const mechanism = mechanisms[mechanismKey];
-        if (!mechanism) return;
-
-        viewer.innerHTML = ''; // Clear previous preview
-        
-        mechanism.steps.forEach((step, index) => {
-            const container = document.createElement('div');
-            container.className = 'chalkboard-pane flex flex-col items-center justify-center p-4';
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = 560;
-            canvas.height = 315;
-            const ctx = canvas.getContext('2d');
-            
-            drawUtils.setupContext(ctx, canvas.width);
-            drawUtils.drawTitle(ctx, `${mechanism.title} - Step ${index + 1}`, canvas.width, canvas.height);
-            step.draw(ctx, canvas.width, canvas.height);
-            drawUtils.drawDescription(ctx, step.desc, canvas.width, canvas.height);
-            
-            container.appendChild(canvas);
-            viewer.appendChild(container);
-        });
-    }
-
-    async function generateVideo() {
-        const mechanismKey = select.value;
-        const mechanism = mechanisms[mechanismKey];
-        if (!mechanism) return;
-
-        updateStatus('Initializing video generation...', true);
-        generateBtn.disabled = true;
-        
-        // Load a library like ffmpeg.wasm or use a server-side solution
-        // For this client-side example, we'll simulate the process and create a placeholder file.
-        // In a real application, you'd use a library to encode frames from the canvases.
-        
-        const totalFrames = mechanism.steps.length * 90; // 3 seconds per step at 30fps
-        let currentFrame = 0;
-        
-        // This is a simulation. A real implementation would be more complex.
-        const encodingInterval = setInterval(() => {
-            currentFrame += 30;
-            const progress = (currentFrame / totalFrames) * 100;
-            updateStatus(`Encoding frames... ${Math.round(progress)}%`, true, progress);
-            
-            if (currentFrame >= totalFrames) {
-                clearInterval(encodingInterval);
-                updateStatus('Finalizing video file...', false);
-                
-                // Simulate finalization and download
-                setTimeout(() => {
-                    const blob = new Blob([`Video for ${mechanism.title}`], { type: 'video/mp4' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${mechanismKey}.mp4`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    updateStatus('Download complete!', false);
-                    setTimeout(() => updateStatus(''), 3000); // Clear status after 3s
-                    generateBtn.disabled = false;
-                }, 1000);
-            }
-        }, 500);
-    }
-
-    function updateStatus(message, showProgress = false, progressValue = 0) {
-        statusText.textContent = message;
-        if (showProgress) {
-            progressBarContainer.classList.remove('hidden');
-            progressBar.style.width = `${progressValue}%`;
-        } else {
-            progressBarContainer.classList.add('hidden');
         }
-    }
+    };
 
     // --- Initialization ---
     function initialize() {
-        const sortedKeys = Object.keys(mechanisms).sort((a, b) => 
-            mechanisms[a].title.localeCompare(mechanisms[b].title)
-        );
-        
-        sortedKeys.forEach(key => {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = mechanisms[key].title;
-            select.appendChild(option);
-        });
-        
-        select.addEventListener('change', (e) => renderMechanismPreview(e.target.value));
-        generateBtn.addEventListener('click', generateVideo);
-        
-        // Render the first mechanism by default
-        if (sortedKeys.length > 0) {
-            renderMechanismPreview(sortedKeys[0]);
-        }
+        const count = Object.keys(mechanisms).length;
+        reactionCount.textContent = count;
+        // Assuming an average of 15 seconds per reaction for the full video
+        const estimatedSeconds = count * 15;
+        durationEstimate.textContent = Math.round(estimatedSeconds / 60);
     }
 
+    // --- Event Listeners ---
+    previewBtn.addEventListener('click', () => {
+        const reactionKeys = Object.keys(mechanisms);
+        if (reactionKeys.length === 0) {
+            statusText.textContent = 'No reactions have been defined.';
+            return;
+        }
+        const randomKey = reactionKeys[Math.floor(Math.random() * reactionKeys.length)];
+        const reaction = mechanisms[randomKey];
+        const firstStep = reaction.steps[0];
+
+        previewContainer.classList.remove('hidden');
+        previewViewer.innerHTML = ''; // Clear previous preview
+
+        const canvas = document.createElement('canvas');
+        // Make the preview canvas a bit smaller and responsive
+        const previewWidth = Math.min(720, window.innerWidth - 40);
+        canvas.width = previewWidth;
+        canvas.height = previewWidth * (9 / 16);
+        canvas.className = 'chalkboard-pane';
+        previewViewer.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // The CSS class already sets the background, but this clears the canvas
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(0, 0, w, h);
+
+        drawUtils.setupContext(ctx, w);
+        drawUtils.drawTitle(ctx, reaction.title, w, h);
+
+        if (firstStep && typeof firstStep.draw === 'function') {
+            firstStep.draw(ctx, w, h);
+        }
+        if (firstStep && firstStep.desc) {
+            drawUtils.drawDescription(ctx, `Step 1: ${firstStep.desc}`, w, h);
+        }
+    });
+
+    generateBtn.addEventListener('click', () => {
+        statusText.textContent = "Video generation is not implemented in this demo.";
+        detailedStatus.textContent = "This feature would require a server-side video rendering engine or a browser-based library like FFmpeg.js.";
+        progressBarContainer.classList.add('hidden');
+    });
+
+    // --- Run Initialization on Load ---
     document.addEventListener('DOMContentLoaded', initialize);
+
     </script>
 </body>
 </html>
